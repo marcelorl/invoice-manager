@@ -2,8 +2,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useBusinessSettings } from "@/contexts/BusinessSettingsContext";
 import { useSaveSettings } from "./hooks/useSaveSettings";
-import { BusinessInfoSection } from "./components/business-info-section";
-import { BankDetailsSection } from "./components/bank-details-section";
 import { Button } from "@/components/ui/button";
 import {
   Card,

@@ -22,7 +22,7 @@ function InvoiceDetailContent() {
   const [, params] = useRoute("/invoices/:id");
   const invoiceId = params?.id;
 
-  const { invoice, client, isLoadingInvoice: isLoading } = useInvoiceContext();
+  const { invoice, isLoadingInvoice: isLoading } = useInvoiceContext();
   const { emailPreviewHtml, showEmailPreview, setShowEmailPreview } = useInvoiceActions(invoiceId, invoice);
 
   if (isLoading) {

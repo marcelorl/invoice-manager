@@ -22,7 +22,7 @@ import { Save, ArrowLeft, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { invoiceFormSchema } from "./types";
-import type { InvoiceFormValues, InvoiceWithItems } from "./types";
+import type { InvoiceFormValues } from "./types";
 
 function InvoiceFormContent() {
   const [location] = useLocation();
