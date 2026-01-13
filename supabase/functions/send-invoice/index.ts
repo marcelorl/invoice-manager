@@ -584,7 +584,7 @@ Deno.serve(handleCORS(async (req) => {
       logger('PDF generated successfully', { size: pdfBytes.length }, 'INFO')
 
       // Save generated PDF to storage
-      const fileName = `${invoice.invoice_number}.pdf`
+      const fileName = `inv-${invoice.invoice_number}.pdf`
       logger('Uploading PDF to storage', { fileName }, 'INFO')
       const { error: uploadError } = await supabaseClient.storage
         .from('invoices')

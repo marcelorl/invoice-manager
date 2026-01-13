@@ -101,19 +101,25 @@ export async function getInvoice(id: string) {
   return data
 }
 
-export async function getNextInvoiceNumber(): Promise<string> {
+export async function getNextInvoiceNumber(clientId?: string): Promise<string> {
+  // If no client is selected, return '1' as default
+  if (!clientId) {
+    return '1'
+  }
+
   const { data, error } = await supabase
     .from('invoices')
     .select('invoice_number')
+    .eq('client_id', clientId)
 
   if (error) throw error
 
-  // If no invoices exist, start with 1
+  // If no invoices exist for this client, start with 1
   if (!data || data.length === 0) {
     return '1'
   }
 
-  // Find the maximum invoice number
+  // Find the maximum invoice number for this client
   let maxNumber = 0
 
   data.forEach(invoice => {

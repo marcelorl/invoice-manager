@@ -41,8 +41,6 @@ function InvoiceFormContent() {
   const { invoice, clients, isLoadingInvoice: invoiceLoading, isLoadingClients: clientsLoading } = useInvoiceContextSafe();
   const { settings } = useBusinessSettings();
 
-  const { data: nextInvoiceNumber } = useNextInvoiceNumber(!isEditing);
-
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
@@ -66,7 +64,13 @@ function InvoiceFormContent() {
     name: "items",
   });
 
-  // Set the next invoice number when creating new invoice
+  // Watch the selected client ID
+  const watchClientId = form.watch("client_id");
+
+  // Get next invoice number for the selected client
+  const { data: nextInvoiceNumber } = useNextInvoiceNumber(watchClientId, !isEditing && !isDuplicating);
+
+  // Set the next invoice number when creating new invoice or when client changes
   useEffect(() => {
     if (!isEditing && !isDuplicating && nextInvoiceNumber) {
       form.setValue('invoice_number', nextInvoiceNumber);
@@ -121,7 +125,6 @@ function InvoiceFormContent() {
   }, [invoice, isDuplicating, nextInvoiceNumber, form]);
 
   // Watch for client changes and update all line item rates
-  const watchClientId = form.watch("client_id");
   useEffect(() => {
     if (watchClientId && clients) {
       const selectedClient = clients.find(c => c.id === watchClientId);
