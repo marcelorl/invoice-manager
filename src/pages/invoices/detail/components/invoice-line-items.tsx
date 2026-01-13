@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface InvoiceLineItemsProps {
   items: InvoiceItem[];
@@ -28,6 +28,7 @@ export function InvoiceLineItems({ items, subtotal, tax, total }: InvoiceLineIte
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
+              <TableHead className="w-32">Date</TableHead>
               <TableHead className="text-center w-24">Qty</TableHead>
               <TableHead className="text-right w-32">Rate</TableHead>
               <TableHead className="text-right w-32">Amount</TableHead>
@@ -37,6 +38,7 @@ export function InvoiceLineItems({ items, subtotal, tax, total }: InvoiceLineIte
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="whitespace-pre-wrap">{item.description}</TableCell>
+                <TableCell className="text-muted-foreground">{item.item_date ? formatDate(item.item_date) : '-'}</TableCell>
                 <TableCell className="text-center">{item.quantity}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatCurrency(item.rate)}</TableCell>
                 <TableCell className="text-right font-medium tabular-nums">{formatCurrency(item.amount)}</TableCell>

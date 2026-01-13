@@ -8,13 +8,9 @@ export function useSummarizeDescription() {
   return useMutation({
     mutationFn: (rawDescription: string) => api.summarizeDescription(rawDescription),
     onError: (error: any) => {
-      const isOllamaError = error.message?.includes('Cannot connect to Ollama');
-
       toast({
-        title: isOllamaError ? "Ollama is not running" : "Error generating summary",
-        description: isOllamaError
-          ? "Please start Ollama on your local machine (http://localhost:11434)"
-          : error.message,
+        title: "Error generating summary",
+        description: error.message || "Failed to generate summary. Please try again.",
         variant: "destructive"
       });
     },

@@ -8,7 +8,7 @@ A modern invoice management system built with React, Supabase, and Vite.
 
 - **Client Management** - Track clients with contact info and reminder preferences
 - **Invoice Creation** - Create invoices with line items, dates, quantities, and tax calculations
-- **AI-Powered Descriptions** - Generate client-friendly summaries from internal notes using Ollama
+- **AI-Powered Descriptions** - Generate client-friendly summaries from internal notes using Groq
 - **Email Integration** - Send invoices via email with professional templates (Resend)
 - **PDF Generation** - Export and view invoices as PDFs stored in Supabase Storage
 - **Payment Tracking** - Mark invoices as paid/unpaid with status filtering
@@ -24,7 +24,7 @@ A modern invoice management system built with React, Supabase, and Vite.
 - **Authentication**: GitHub OAuth via Supabase Auth
 - **State Management**: TanStack React Query + React Hook Form
 - **Email**: Resend API
-- **AI**: Ollama (local LLM for description generation)
+- **AI**: Groq (LLM API for description generation)
 - **CI/CD**: GitHub Actions (auto-deploy migrations + edge functions)
 
 ## Getting Started
@@ -36,7 +36,7 @@ A modern invoice management system built with React, Supabase, and Vite.
 - Node.js 20+
 - Supabase account ([create one](https://supabase.com))
 - Resend account (for emails) ([create one](https://resend.com))
-- Ollama installed (for AI features)
+- Groq API key (for AI features) ([get one](https://console.groq.com))
 
 ### Local Development Setup
 
@@ -69,61 +69,16 @@ A modern invoice management system built with React, Supabase, and Vite.
      - Add your Client ID and Client Secret
      - Save
 
-5. **Link to your Supabase project**
-   ```bash
-   npx supabase link --project-ref YOUR_PROJECT_ID
-   ```
-
-6. **Run migrations**
-   ```bash
-   npm run supabase:db:push
-   ```
-   This applies all database migrations to your live Supabase project.
-
-7. **Set up Vault secrets and cron jobs**
+5. **Set up Vault secrets and cron jobs**
    - Get your service role key from Supabase Dashboard → Settings → API
    - Update `supabase/seeds/00_secrets_and_cron.sql` with actual keys
    - Run the seed file manually in Supabase Studio SQL Editor
 
-8. **Deploy edge functions**
-   ```bash
-   npm run supabase:functions:deploy
-
-   # Set secrets
-   npx supabase secrets set RESEND_API_KEY="your-resend-key"
-   ```
-
-9. **Start the frontend**
+6. **Start the frontend**
    ```bash
    npm run dev
    ```
    Open http://localhost:5173
-
-10. **Configure business settings**
-    - Sign in with GitHub
-    - Go to Settings page
-    - Add your company info and email (used as FROM email for reminders)
-
-### Testing Reminders
-
-```bash
-# Get service role key from Supabase Dashboard → Settings → API
-
-# Test reminder function
-curl -X POST https://your-project-id.supabase.co/functions/v1/process-reminders \
-  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
-  -H "Content-Type: application/json"
-```
-
-### Importing Existing Invoices
-
-Place your PDF invoices in `attached_assets/` folder and run:
-
-```bash
-npm run import-invoices
-```
-
-This generates `scripts/output-import.sql` - review and run in your Supabase Studio SQL Editor.
 
 ## Development Commands
 

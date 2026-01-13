@@ -42,7 +42,7 @@ export function useInvoiceActions(invoiceId: string | undefined) {
   const clientEmail = invoice?.client?.target_email || null;
 
   // Action handlers
-  const handleMarkAsPaid = () => markAsPaidMutation.mutate();
+  const handleMarkAsPaid = (paidDate: string) => markAsPaidMutation.mutate(paidDate);
 
   const handleDelete = () => deleteMutation.mutate();
 

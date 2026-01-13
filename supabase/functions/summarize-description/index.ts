@@ -1,6 +1,7 @@
 import { handleCORS } from '../_shared/middlewares/cors.ts'
 import { summarizeDescriptionSchema } from './validation.ts'
 import { logger } from '../_shared/utils/logger.ts'
+import Groq from 'npm:groq-sdk@0.37.0'
 
 // Prompt engineering for one-line summaries
 const SYSTEM_PROMPT = `You are a professional invoice line item summarizer. Your task is to convert detailed internal work descriptions into concise, client-friendly one-line summaries.
@@ -22,59 +23,50 @@ Output: "User profile API endpoint development"
 Input: "Project management and client communication for Q1 roadmap planning including 3 meetings and documentation"
 Output: "Q1 roadmap planning and project coordination"`
 
-async function callOllama(
-  ollamaUrl: string,
-  model: string,
+async function callGroq(
+  apiKey: string,
   rawDescription: string
 ): Promise<string> {
-  const apiUrl = `${ollamaUrl}/api/generate`
-
-  logger('Calling Ollama API', { apiUrl, model }, 'INFO')
+  logger('Calling Groq API', { model: 'llama-3.1-8b-instant' }, 'INFO')
 
   try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        prompt: `${SYSTEM_PROMPT}\n\nNow summarize this description:\n\n"${rawDescription}"\n\nOne-line summary:`,
-        stream: false,
-        options: {
-          temperature: 0.3, // Lower temperature for consistent, focused output
-          top_p: 0.9,
-          num_predict: 50, // Limit to keep responses concise
+    const groq = new Groq({ apiKey })
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: SYSTEM_PROMPT,
         },
-      }),
+        {
+          role: 'user',
+          content: `Now summarize this description:\n\n"${rawDescription}"\n\nOne-line summary:`,
+        },
+      ],
+      model: 'llama-3.1-8b-instant',
+      temperature: 0.3,
+      max_completion_tokens: 100,
+      top_p: 0.9,
+      stream: false,
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      logger('Ollama API error response', { status: response.status, error: errorText }, 'ERROR')
-      throw new Error(`Ollama API error: ${response.status} - ${errorText}`)
+    const summary = chatCompletion.choices[0]?.message?.content
+
+    if (!summary) {
+      throw new Error('No response from Groq')
     }
 
-    const data = await response.json()
-    logger('Ollama response received', { hasResponse: !!data.response }, 'INFO')
-
-    if (!data.response) {
-      throw new Error('No response from Ollama')
-    }
+    logger('Groq response received', { hasResponse: !!summary }, 'INFO')
 
     // Clean up the response (remove quotes, extra whitespace)
-    let summary = data.response.trim()
-    summary = summary.replace(/^["']|["']$/g, '') // Remove surrounding quotes
-    summary = summary.replace(/\n/g, ' ').replace(/\s+/g, ' ') // Normalize whitespace
+    let cleanedSummary = summary.trim()
+    cleanedSummary = cleanedSummary.replace(/^["']|["']$/g, '') // Remove surrounding quotes
+    cleanedSummary = cleanedSummary.replace(/\n/g, ' ').replace(/\s+/g, ' ') // Normalize whitespace
 
-    return summary
+    return cleanedSummary
   } catch (error) {
-    // Check if it's a network error (Ollama not running)
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      logger('Ollama connection failed', { ollamaUrl }, 'ERROR')
-      throw new Error('Cannot connect to Ollama. Please ensure Ollama is running at ' + ollamaUrl)
-    }
-    throw error
+    logger('Groq API error', { error: error.message }, 'ERROR')
+    throw new Error(`Groq API error: ${error.message}`)
   }
 }
 
@@ -101,11 +93,25 @@ Deno.serve(handleCORS(async (req) => {
     )
   }
 
-  const { rawDescription, ollamaUrl, model } = validation.data
-  logger('Request validated successfully', { rawDescription, ollamaUrl, model }, 'INFO')
+  const { rawDescription } = validation.data
+  logger('Request validated successfully', { rawDescription }, 'INFO')
+
+  // Get Groq API key from environment
+  const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')
+
+  if (!GROQ_API_KEY) {
+    logger('Groq API key not configured', {}, 'ERROR')
+    return new Response(
+      JSON.stringify({ error: 'Groq API key not configured' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+  }
 
   try {
-    const summary = await callOllama(ollamaUrl, model, rawDescription)
+    const summary = await callGroq(GROQ_API_KEY, rawDescription)
 
     logger('Summary generated successfully', {
       inputLength: rawDescription.length,
@@ -117,7 +123,7 @@ Deno.serve(handleCORS(async (req) => {
       JSON.stringify({
         success: true,
         summary,
-        model,
+        model: 'llama-3.1-8b-instant',
       }),
       {
         headers: { 'Content-Type': 'application/json' },
@@ -129,7 +135,6 @@ Deno.serve(handleCORS(async (req) => {
     return new Response(
       JSON.stringify({
         error: error.message || 'Failed to generate summary',
-        isOllamaConnectionError: error.message?.includes('Cannot connect to Ollama'),
       }),
       {
         status: 500,

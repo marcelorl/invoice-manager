@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, Eye, ArrowLeft, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { invoiceFormSchema } from "./types";
@@ -54,7 +54,13 @@ export default function InvoiceFormPage() {
       issue_date: formatDateForInput(new Date()),
       due_date: formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
       tax_rate: 0,
-      items: [{ description: "", raw_description: "", quantity: 1, rate: 0, item_date: formatDateForInput(new Date()) }],
+      items: [{
+        description: "",
+        raw_description: "",
+        quantity: 8,
+        rate: 0,
+        item_date: formatDateForInput(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000))
+      }],
     },
   });
 
@@ -95,19 +101,24 @@ export default function InvoiceFormPage() {
   useEffect(() => {
     if (invoice && isDuplicating && nextInvoiceNumber) {
       const today = formatDateForInput(new Date());
+
       form.reset({
         invoice_number: nextInvoiceNumber,
         client_id: invoice.client_id || "",
         issue_date: today,
         due_date: formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
         tax_rate: invoice.tax_rate || 0,
-        items: invoice.items.map((item) => ({
-          description: item.description,
-          raw_description: item.raw_description || "",
-          quantity: item.quantity,
-          rate: item.rate,
-          item_date: today,
-        })),
+        items: invoice.items.map((item, index) => {
+          const itemDate = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
+          itemDate.setDate(itemDate.getDate() + index);
+          return {
+            description: item.description,
+            raw_description: item.raw_description || "",
+            quantity: item.quantity,
+            rate: item.rate,
+            item_date: formatDateForInput(itemDate),
+          };
+        }),
       });
     }
   }, [invoice, isDuplicating, nextInvoiceNumber, form]);
@@ -136,7 +147,8 @@ export default function InvoiceFormPage() {
       if (currentItems && currentItems.length > 0) {
         const updatedItems = currentItems.map((item, index) => {
           const date = new Date(watchIssueDate);
-          date.setDate(date.getDate() + index);
+          // First item starts 4 days before issue date, then increments
+          date.setDate(date.getDate() - 4 + index);
           return {
             ...item,
             item_date: date.toISOString().split('T')[0],
@@ -285,6 +297,11 @@ export default function InvoiceFormPage() {
       if (lastItem.item_date) {
         defaultDate = addOneDay(lastItem.item_date);
       }
+    } else {
+      // First item should be 4 days before issue date
+      const date = new Date(defaultDate);
+      date.setDate(date.getDate() - 4);
+      defaultDate = date.toISOString().split('T')[0];
     }
 
     if (clientId && clients) {
@@ -297,7 +314,7 @@ export default function InvoiceFormPage() {
     append({
       description: "",
       raw_description: "",
-      quantity: 1,
+      quantity: 8,
       rate: defaultRate,
       item_date: defaultDate
     });
@@ -392,7 +409,7 @@ export default function InvoiceFormPage() {
                     <FormItem>
                       <FormLabel>Issue Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} data-testid="input-issue-date" />
+                        <Input type="date" {...field} lang="en-US" data-testid="input-issue-date" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -406,7 +423,7 @@ export default function InvoiceFormPage() {
                     <FormItem>
                       <FormLabel>Due Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} data-testid="input-due-date" />
+                        <Input type="date" {...field} lang="en-US" data-testid="input-due-date" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -445,7 +462,7 @@ export default function InvoiceFormPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-[3fr_3fr_2fr_1fr_1fr_1fr_auto] gap-4 text-sm font-medium text-muted-foreground mb-2">
+                <div className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr_auto] gap-4 text-sm font-medium text-muted-foreground mb-2">
                   <div>Internal Notes</div>
                   <div>Client Summary</div>
                   <div>Date</div>
@@ -461,7 +478,7 @@ export default function InvoiceFormPage() {
                   const amount = qty * rate;
 
                   return (
-                    <div key={field.id} className="grid grid-cols-[3fr_3fr_2fr_1fr_1fr_1fr_auto] gap-4 items-start border-b pb-4 mb-4">
+                    <div key={field.id} className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr_auto] gap-4 items-start border-b pb-4 mb-4">
                       {/* Raw Description (Internal) */}
                       <div>
                         <FormField
@@ -523,6 +540,7 @@ export default function InvoiceFormPage() {
                                 <Input
                                   type="date"
                                   {...field}
+                                  lang="en-US"
                                   className="h-10"
                                   data-testid={`input-item-date-${index}`}
                                 />
@@ -655,14 +673,6 @@ export default function InvoiceFormPage() {
                 Cancel
               </Button>
             </Link>
-            {isEditing && (
-              <Link href={`/invoices/${invoiceId}/pdf`}>
-                <Button type="button" variant="outline" className="gap-2" data-testid="button-preview">
-                  <Eye className="h-4 w-4" />
-                  Preview PDF
-                </Button>
-              </Link>
-            )}
             <Button
               type="button"
               variant="outline"

@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -36,6 +39,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
+import { formatDateForInput } from "@/lib/utils";
 
 interface InvoiceActionsProps {
   invoiceId: string;
@@ -44,6 +48,8 @@ interface InvoiceActionsProps {
 export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showPaidDateDialog, setShowPaidDateDialog] = useState(false);
+  const [paidDate, setPaidDate] = useState(formatDateForInput(new Date()));
 
   const {
     invoiceNumber,
@@ -68,7 +74,7 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
         <Button
           variant="outline"
           className="gap-2"
-          onClick={onMarkAsPaid}
+          onClick={() => setShowPaidDateDialog(true)}
           disabled={isMarkingPaid}
           data-testid="button-mark-paid"
         >
@@ -205,6 +211,40 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPaidDateDialog} onOpenChange={setShowPaidDateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark Invoice as Paid</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="paid-date">Payment Date</Label>
+              <Input
+                id="paid-date"
+                type="date"
+                value={paidDate}
+                onChange={(e) => setPaidDate(e.target.value)}
+                lang="en-US"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaidDateDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                onMarkAsPaid(paidDate);
+                setShowPaidDateDialog(false);
+              }}
+              disabled={isMarkingPaid}
+            >
+              Mark as Paid
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

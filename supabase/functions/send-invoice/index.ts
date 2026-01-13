@@ -133,9 +133,10 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   // ===== ITEMS TABLE =====
   // Table header
   const descX = margin
-  const qtyX = pageWidth - margin - 200
-  const rateX = pageWidth - margin - 130
-  const amountX = pageWidth - margin - 60
+  const dateX = pageWidth - margin - 240
+  const qtyX = pageWidth - margin - 180
+  const rateX = pageWidth - margin - 110
+  const amountX = pageWidth - margin - 40
 
   // Draw dark grey background for table header
   page.drawRectangle({
@@ -147,6 +148,7 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   })
 
   page.drawText('Item Description', { x: descX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
+  page.drawText('Date', { x: dateX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
   page.drawText('Qty', { x: qtyX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
   page.drawText('Rate', { x: rateX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
   page.drawText('Amount', { x: amountX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
@@ -164,7 +166,7 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   // Table rows
   for (const item of invoice.items) {
     // Wrap description if too long
-    const maxDescWidth = qtyX - descX - 10
+    const maxDescWidth = dateX - descX - 10
     const description = item.description
     const descWords = description.split(' ')
     let descLine = ''
@@ -185,6 +187,7 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
 
     // Draw first line with all columns
     page.drawText(descLines[0] || '', { x: descX, y: yPos, size: 10, font, color: blackColor })
+    page.drawText(formatDate(item.item_date), { x: dateX, y: yPos, size: 10, font, color: grayColor })
     page.drawText(String(item.quantity), { x: qtyX + 10, y: yPos, size: 10, font, color: grayColor })
     page.drawText(parseFloat(item.rate).toFixed(2), { x: rateX, y: yPos, size: 10, font, color: grayColor })
     page.drawText(parseFloat(item.amount).toFixed(2), { x: amountX, y: yPos, size: 10, font: boldFont, color: blackColor })

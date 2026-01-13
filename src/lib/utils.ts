@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format, parse } from "date-fns"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -23,17 +24,40 @@ export function toNumber(value: number | string | null | undefined): number {
 }
 
 export function formatDate(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  }).format(d);
+  try {
+    // If string, parse as local date (YYYY-MM-DD format)
+    if (typeof date === 'string') {
+      // Handle ISO timestamps (with T or Z)
+      if (date.includes('T') || date.includes('Z')) {
+        const parsed = new Date(date);
+        if (isNaN(parsed.getTime())) return 'Invalid Date';
+        return format(parsed, 'MMM dd, yyyy');
+      }
+      // Handle YYYY-MM-DD format
+      const parsed = parse(date, 'yyyy-MM-dd', new Date());
+      if (isNaN(parsed.getTime())) return 'Invalid Date';
+      return format(parsed, 'MMM dd, yyyy');
+    }
+    // If Date object, format it
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return format(date, 'MMM dd, yyyy');
+  } catch (error) {
+    console.error('Error formatting date:', date, error);
+    return 'Invalid Date';
+  }
 }
 
 export function formatDateForInput(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toISOString().split('T')[0];
+  // If already a string in YYYY-MM-DD format, return as-is
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+
+  // If string, parse as local date first
+  const d = typeof date === 'string' ? parse(date, 'yyyy-MM-dd', new Date()) : date;
+
+  // Format as YYYY-MM-DD using local date components
+  return format(d, 'yyyy-MM-dd');
 }
 
 export function getStatusColor(status: string): string {
@@ -82,8 +106,12 @@ export function isLastDayOfMonth(): boolean {
 }
 
 export function getDaysUntilDue(dueDate: string): number {
-  const due = new Date(dueDate);
+  // Parse due date as local date
+  const due = parse(dueDate, 'yyyy-MM-dd', new Date());
   const today = new Date();
+  // Set both to midnight for accurate day comparison
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
   const diffTime = due.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }

@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { parse } from 'date-fns'
 import type { Database } from '@shared/database.types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -104,8 +105,6 @@ export async function getNextInvoiceNumber(): Promise<string> {
   const { data, error } = await supabase
     .from('invoices')
     .select('invoice_number')
-    .order('created_at', { ascending: false })
-    .limit(1)
 
   if (error) throw error
 
@@ -114,18 +113,21 @@ export async function getNextInvoiceNumber(): Promise<string> {
     return '1'
   }
 
-  // Extract the number from the last invoice
-  const lastInvoiceNumber = data[0].invoice_number
+  // Find the maximum invoice number
+  let maxNumber = 0
 
-  // Try to parse as a number, if it's just digits
-  const numberMatch = lastInvoiceNumber.match(/\d+/)
-  if (numberMatch) {
-    const lastNumber = parseInt(numberMatch[0], 10)
-    return (lastNumber + 1).toString()
-  }
+  data.forEach(invoice => {
+    const numberMatch = invoice.invoice_number.match(/\d+/)
+    if (numberMatch) {
+      const num = parseInt(numberMatch[0], 10)
+      if (num > maxNumber) {
+        maxNumber = num
+      }
+    }
+  })
 
-  // If we can't parse it, default to 1
-  return '1'
+  // Return max + 1
+  return (maxNumber + 1).toString()
 }
 
 // Helper to calculate invoice totals
@@ -191,6 +193,7 @@ export async function createInvoice(invoiceData: any) {
         quantity: item.quantity,
         rate: item.rate.toString(),
         amount: item.amount,
+        item_date: item.item_date,
       }))
     )
 
@@ -235,6 +238,7 @@ export async function updateInvoice(id: string, invoiceData: any) {
           quantity: item.quantity,
           rate: item.rate.toString(),
           amount: item.amount,
+          item_date: item.item_date,
         }))
       )
 
@@ -278,12 +282,16 @@ export async function deleteInvoice(id: string) {
   if (error) throw error
 }
 
-export async function markInvoiceAsPaid(id: string) {
+export async function markInvoiceAsPaid(id: string, paidDate: string) {
+  // Parse YYYY-MM-DD as local date and convert to ISO timestamp
+  const parsedDate = parse(paidDate, 'yyyy-MM-dd', new Date())
+  const paidAtTimestamp = parsedDate.toISOString()
+
   const { data, error } = await supabase
     .from('invoices')
     .update({
       status: 'paid',
-      paid_at: new Date().toISOString(),
+      paid_at: paidAtTimestamp,
     })
     .eq('id', id)
     .select(`
@@ -451,8 +459,6 @@ export async function summarizeDescription(rawDescription: string) {
   const { data, error } = await supabase.functions.invoke('summarize-description', {
     body: {
       rawDescription,
-      ollamaUrl: 'http://host.docker.internal:11434',
-      model: 'llama3.2',
     },
   })
 

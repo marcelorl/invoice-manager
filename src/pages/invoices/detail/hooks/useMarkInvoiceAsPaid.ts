@@ -7,7 +7,7 @@ export function useMarkInvoiceAsPaid(invoiceId: string | undefined) {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: () => api.markInvoiceAsPaid(invoiceId!),
+    mutationFn: (paidDate: string) => api.markInvoiceAsPaid(invoiceId!, paidDate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["invoices", invoiceId] });
