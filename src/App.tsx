@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/protected-route";
+import { BusinessSettingsProvider } from "@/contexts/BusinessSettingsContext";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
@@ -105,15 +106,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Switch>
-            <Route path="/login" component={LoginPage} />
-            <Route>
-              <AppLayout />
-            </Route>
-          </Switch>
-          <Toaster />
-        </TooltipProvider>
+        <BusinessSettingsProvider>
+          <TooltipProvider>
+            <Switch>
+              <Route path="/login" component={LoginPage} />
+              <Route>
+                <AppLayout />
+              </Route>
+            </Switch>
+            <Toaster />
+          </TooltipProvider>
+        </BusinessSettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

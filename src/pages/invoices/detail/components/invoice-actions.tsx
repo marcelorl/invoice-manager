@@ -38,6 +38,7 @@ import {
   CloudUpload,
   Eye,
 } from "lucide-react";
+import { useInvoiceContext } from "@/contexts/InvoiceContext";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
 import { formatDateForInput } from "@/lib/utils";
 
@@ -50,6 +51,9 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showPaidDateDialog, setShowPaidDateDialog] = useState(false);
   const [paidDate, setPaidDate] = useState(formatDateForInput(new Date()));
+
+  // Get invoice from context
+  const { invoice } = useInvoiceContext();
 
   const {
     invoiceNumber,
@@ -66,7 +70,7 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
     isSavingToGoogleDrive,
     isSendingEmail,
     isLoadingPreview,
-  } = useInvoiceActions(invoiceId);
+  } = useInvoiceActions(invoiceId, invoice);
 
   return (
     <div className="flex items-center gap-2">

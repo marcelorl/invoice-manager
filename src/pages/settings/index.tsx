@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSettings } from "@/hooks/useSettings";
+import { useBusinessSettings } from "@/contexts/BusinessSettingsContext";
 import { useSaveSettings } from "./hooks/useSaveSettings";
 import { BusinessInfoSection } from "./components/business-info-section";
 import { BankDetailsSection } from "./components/bank-details-section";
@@ -28,7 +28,7 @@ import { settingsSchema } from "./types";
 import type { SettingsFormValues } from "./types";
 
 export default function SettingsPage() {
-  const { data: settings, isLoading } = useSettings();
+  const { settings, isLoading } = useBusinessSettings();
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
