@@ -1,13 +1,13 @@
 import type { Client } from "@shared/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSettings } from "@/hooks/useSettings";
+import { useBusinessSettings } from "@/contexts/BusinessSettingsContext";
 
 interface InvoiceDetailsCardProps {
   client?: Client | null;
 }
 
 export function InvoiceDetailsCard({ client }: InvoiceDetailsCardProps) {
-  const { data: settings } = useSettings();
+  const { settings } = useBusinessSettings();
   return (
     <Card>
       <CardHeader>

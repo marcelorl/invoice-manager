@@ -1,5 +1,5 @@
 import { useRoute, Link } from "wouter";
-import { useInvoice } from "./hooks/useInvoice";
+import { InvoiceProvider, useInvoiceContext } from "@/contexts/InvoiceContext";
 import { useInvoiceActions } from "./hooks/useInvoiceActions";
 import { InvoiceActions } from "./components/invoice-actions";
 import { InvoiceDetailsCard } from "./components/invoice-details-card";
@@ -18,12 +18,12 @@ import { StatusBadge } from "@/components/status-badge";
 import { ArrowLeft, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function InvoiceDetailPage() {
+function InvoiceDetailContent() {
   const [, params] = useRoute("/invoices/:id");
   const invoiceId = params?.id;
 
-  const { data: invoice, isLoading } = useInvoice(invoiceId);
-  const { emailPreviewHtml, showEmailPreview, setShowEmailPreview } = useInvoiceActions(invoiceId);
+  const { invoice, isLoadingInvoice: isLoading } = useInvoiceContext();
+  const { emailPreviewHtml, showEmailPreview, setShowEmailPreview } = useInvoiceActions(invoiceId, invoice);
 
   if (isLoading) {
     return (
@@ -113,5 +113,16 @@ export default function InvoiceDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function InvoiceDetailPage() {
+  const [, params] = useRoute("/invoices/:id");
+  const invoiceId = params?.id;
+
+  return (
+    <InvoiceProvider invoiceId={invoiceId}>
+      <InvoiceDetailContent />
+    </InvoiceProvider>
   );
 }

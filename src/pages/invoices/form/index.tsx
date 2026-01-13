@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useInvoice } from "./hooks/useInvoice";
+import { InvoiceProvider, useInvoiceContextSafe } from "@/contexts/InvoiceContext";
+import { useBusinessSettings } from "@/contexts/BusinessSettingsContext";
 import { useNextInvoiceNumber } from "./hooks/useNextInvoiceNumber";
 import { useCreateInvoice } from "./hooks/useCreateInvoice";
 import { useUpdateInvoice } from "./hooks/useUpdateInvoice";
 import { useSummarizeDescription } from "./hooks/useSummarizeDescription";
-import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateForInput } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,9 @@ import { Save, ArrowLeft, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { invoiceFormSchema } from "./types";
-import type { InvoiceFormValues, InvoiceWithItems } from "./types";
+import type { InvoiceFormValues } from "./types";
 
-export default function InvoiceFormPage() {
+function InvoiceFormContent() {
   const [location] = useLocation();
   const [, params] = useRoute("/invoices/:id");
   const [, editParams] = useRoute("/invoices/:id/edit");
@@ -37,12 +37,9 @@ export default function InvoiceFormPage() {
   const duplicateId = searchParams.get('duplicate');
   const isDuplicating = !!duplicateId;
 
-  const { data: invoice, isLoading: invoiceLoading } = useInvoice(
-    invoiceId || duplicateId || undefined,
-    isEditing || isDuplicating
-  );
-
-  const { data: clients, isLoading: clientsLoading } = useClients();
+  // Get invoice and clients from context (safe to call even without provider)
+  const { invoice, clients, isLoadingInvoice: invoiceLoading, isLoadingClients: clientsLoading } = useInvoiceContextSafe();
+  const { settings } = useBusinessSettings();
 
   const { data: nextInvoiceNumber } = useNextInvoiceNumber(!isEditing);
 
@@ -240,12 +237,32 @@ export default function InvoiceFormPage() {
       }
     }
 
+    // Generate notes from business settings
+    let notesText = '';
+    if (settings) {
+      notesText = `Payment Information\n\n`;
+      notesText += `Beneficiary Name: ${settings.beneficiary_name}\n`;
+      notesText += `CNPJ: ${settings.beneficiary_cnpj}\n`;
+      notesText += `SWIFT/BIC Code: ${settings.swift_code}\n`;
+      notesText += `Bank Name: ${settings.bank_name}\n`;
+      notesText += `Bank Address: ${settings.bank_address}\n`;
+      notesText += `Routing Number: ${settings.routing_number}\n`;
+      notesText += `Account Number: ${settings.account_number}\n`;
+      notesText += `Account Type: ${settings.account_type}`;
+    }
+
+    // Get terms from selected client
+    const selectedClient = clients.find(c => c.id === data.client_id);
+    const termsText = selectedClient?.terms || '';
+
     const invoiceData = {
       invoice_number: data.invoice_number,
       client_id: data.client_id,
       issue_date: data.issue_date,
       due_date: data.due_date,
       tax_rate: data.tax_rate || 0,
+      notes: notesText,
+      terms: termsText,
       items: data.items.map((item) => ({
         description: item.description || "",
         raw_description: item.raw_description || null,
@@ -714,5 +731,30 @@ export default function InvoiceFormPage() {
         </form>
       </Form>
     </div>
+  );
+}
+
+export default function InvoiceFormPage() {
+  const [location] = useLocation();
+  const [, params] = useRoute("/invoices/:id");
+  const [, editParams] = useRoute("/invoices/:id/edit");
+
+  const invoiceId = params?.id || editParams?.id;
+  const isEditing = !!invoiceId && invoiceId !== "new";
+
+  // Check for duplicate mode
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const duplicateId = searchParams.get('duplicate');
+  const isDuplicating = !!duplicateId;
+
+  // Always wrap with InvoiceProvider
+  // For editing/duplicating: pass the invoice ID
+  // For new invoices: pass undefined (provider will still fetch clients list)
+  const id = isEditing ? invoiceId : (isDuplicating ? duplicateId : undefined);
+
+  return (
+    <InvoiceProvider invoiceId={id}>
+      <InvoiceFormContent />
+    </InvoiceProvider>
   );
 }

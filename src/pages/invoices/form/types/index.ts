@@ -1,4 +1,3 @@
-import type { Invoice, InvoiceItem, Client } from "@shared/types";
 import { z } from "zod";
 
 export const invoiceItemSchema = z.object({
@@ -19,8 +18,3 @@ export const invoiceFormSchema = z.object({
 });
 
 export type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
-
-export type InvoiceWithItems = Invoice & {
-  items: InvoiceItem[];
-  client: Client | null;
-};

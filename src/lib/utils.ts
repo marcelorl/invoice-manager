@@ -41,8 +41,7 @@ export function formatDate(date: string | Date): string {
     // If Date object, format it
     if (isNaN(date.getTime())) return 'Invalid Date';
     return format(date, 'MMM dd, yyyy');
-  } catch (error) {
-    console.error('Error formatting date:', date, error);
+  } catch {
     return 'Invalid Date';
   }
 }
@@ -73,12 +72,6 @@ export function getStatusColor(status: string): string {
     default:
       return 'bg-muted text-muted-foreground';
   }
-}
-
-export function generateInvoiceNumber(): string {
-  const prefix = 'INV';
-  const number = Math.floor(Math.random() * 10000).toString().padStart(2, '0');
-  return `${prefix}-${number}`;
 }
 
 export function isFriday(): boolean {

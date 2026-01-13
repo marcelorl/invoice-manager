@@ -41,6 +41,14 @@ function formatDate(dateString: string): string {
   })
 }
 
+// Format date short (mm/dd/yy)
+function formatDateShort(dateString: string): string {
+  // Parse YYYY-MM-DD as local date to avoid timezone issues
+  const [year, month, day] = dateString.split('T')[0].split('-')
+  const shortYear = year.slice(-2)
+  return `${month}/${day}/${shortYear}`
+}
+
 // Generate PDF from invoice data - matches InvoicePreview component exactly
 async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create()
@@ -136,7 +144,14 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   const dateX = pageWidth - margin - 240
   const qtyX = pageWidth - margin - 180
   const rateX = pageWidth - margin - 110
-  const amountX = pageWidth - margin - 40
+  const amountX = pageWidth - margin - 44 // Increased by 4 pixels
+
+  // Calculate column widths
+  const descColWidth = dateX - descX
+  const dateColWidth = qtyX - dateX
+  const qtyColWidth = rateX - qtyX
+  const rateColWidth = amountX - rateX
+  const amountColWidth = pageWidth - margin - amountX
 
   // Draw dark grey background for table header
   page.drawRectangle({
@@ -147,21 +162,31 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
     color: rgb(0.25, 0.25, 0.25),
   })
 
-  page.drawText('Item Description', { x: descX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
-  page.drawText('Date', { x: dateX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
-  page.drawText('Qty', { x: qtyX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
-  page.drawText('Rate', { x: rateX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
-  page.drawText('Amount', { x: amountX, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) })
+  // Center-aligned headers (vertically centered in header box)
+  const headerSize = 10
+  const headerYPos = yPos + 2 // Vertically center text in 18px high box
+  const descHeader = 'Item Description'
+  const dateHeader = 'Date'
+  const qtyHeader = 'Qty'
+  const rateHeader = 'Rate'
+  const amountHeader = 'Amount'
 
-  yPos -= 8
-  // Header border line
-  page.drawLine({
-    start: { x: margin, y: yPos },
-    end: { x: pageWidth - margin, y: yPos },
-    thickness: 1,
-    color: rgb(0.8, 0.8, 0.8),
-  })
-  yPos -= 16
+  const descHeaderWidth = boldFont.widthOfTextAtSize(descHeader, headerSize)
+  page.drawText(descHeader, { x: descX + (descColWidth - descHeaderWidth) / 2, y: headerYPos, size: headerSize, font: boldFont, color: rgb(1, 1, 1) })
+
+  const dateHeaderWidth = boldFont.widthOfTextAtSize(dateHeader, headerSize)
+  page.drawText(dateHeader, { x: dateX + (dateColWidth - dateHeaderWidth) / 2, y: headerYPos, size: headerSize, font: boldFont, color: rgb(1, 1, 1) })
+
+  const qtyHeaderWidth = boldFont.widthOfTextAtSize(qtyHeader, headerSize)
+  page.drawText(qtyHeader, { x: qtyX + (qtyColWidth - qtyHeaderWidth) / 2, y: headerYPos, size: headerSize, font: boldFont, color: rgb(1, 1, 1) })
+
+  const rateHeaderWidth = boldFont.widthOfTextAtSize(rateHeader, headerSize)
+  page.drawText(rateHeader, { x: rateX + (rateColWidth - rateHeaderWidth) / 2, y: headerYPos, size: headerSize, font: boldFont, color: rgb(1, 1, 1) })
+
+  const amountHeaderWidth = boldFont.widthOfTextAtSize(amountHeader, headerSize)
+  page.drawText(amountHeader, { x: amountX + (amountColWidth - amountHeaderWidth) / 2, y: headerYPos, size: headerSize, font: boldFont, color: rgb(1, 1, 1) })
+
+  yPos -= 14
 
   // Table rows
   for (const item of invoice.items) {
@@ -185,12 +210,26 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
     }
     if (descLine) descLines.push(descLine)
 
-    // Draw first line with all columns
+    // Draw first line with all columns (center-aligned for numeric columns)
+    const dateText = formatDateShort(item.item_date)
+    const qtyText = String(item.quantity)
+    const rateText = parseFloat(item.rate).toFixed(2)
+    const amountText = parseFloat(item.amount).toFixed(2)
+
     page.drawText(descLines[0] || '', { x: descX, y: yPos, size: 10, font, color: blackColor })
-    page.drawText(formatDate(item.item_date), { x: dateX, y: yPos, size: 10, font, color: grayColor })
-    page.drawText(String(item.quantity), { x: qtyX + 10, y: yPos, size: 10, font, color: grayColor })
-    page.drawText(parseFloat(item.rate).toFixed(2), { x: rateX, y: yPos, size: 10, font, color: grayColor })
-    page.drawText(parseFloat(item.amount).toFixed(2), { x: amountX, y: yPos, size: 10, font: boldFont, color: blackColor })
+
+    const dateTextWidth = font.widthOfTextAtSize(dateText, 10)
+    page.drawText(dateText, { x: dateX + (dateColWidth - dateTextWidth) / 2, y: yPos, size: 10, font, color: grayColor })
+
+    const qtyTextWidth = font.widthOfTextAtSize(qtyText, 10)
+    page.drawText(qtyText, { x: qtyX + (qtyColWidth - qtyTextWidth) / 2, y: yPos, size: 10, font, color: grayColor })
+
+    const rateTextWidth = font.widthOfTextAtSize(rateText, 10)
+    page.drawText(rateText, { x: rateX + (rateColWidth - rateTextWidth) / 2, y: yPos, size: 10, font, color: grayColor })
+
+    const amountTextWidth = boldFont.widthOfTextAtSize(amountText, 10)
+    page.drawText(amountText, { x: amountX + (amountColWidth - amountTextWidth) / 2, y: yPos, size: 10, font: boldFont, color: blackColor })
+
     yPos -= 14
 
     // Draw remaining description lines
@@ -235,49 +274,19 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   // Draw light grey background for TOTAL row
   page.drawRectangle({
     x: totalsLabelX,
-    y: yPos - 4,
+    y: yPos - 6,
     width: pageWidth - margin - totalsLabelX,
-    height: 20,
+    height: 24,
     color: rgb(0.95, 0.95, 0.95),
   })
 
-  page.drawText('TOTAL', { x: totalsLabelX, y: yPos, size: 13, font: boldFont, color: blackColor })
-  page.drawText(formatCurrency(invoice.total), { x: totalsValueX, y: yPos, size: 13, font: boldFont, color: blackColor })
+  page.drawText('TOTAL', { x: totalsLabelX + 4, y: yPos + 2, size: 13, font: boldFont, color: blackColor })
+  page.drawText(formatCurrency(invoice.total), { x: totalsValueX, y: yPos + 2, size: 13, font: boldFont, color: blackColor })
 
-  yPos -= 50
-
-  // ===== PAYMENT INFORMATION SECTION =====
-  if (settings) {
-    page.drawText('Payment Information', { x: margin, y: yPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
-    yPos -= 12
-
-    const infoSize = 9
-    const infoColor = grayColor
-
-    page.drawText(`Beneficiary Name: ${settings.beneficiary_name}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`Beneficiary CNPJ: ${settings.beneficiary_cnpj}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`SWIFT/BIC Code: ${settings.swift_code}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`Bank Address: ${settings.bank_address}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`Routing Number: ${settings.routing_number}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`Account Number: ${settings.account_number}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-    page.drawText(`Account Type: ${settings.account_type}`, { x: margin, y: yPos, size: infoSize, font, color: infoColor })
-    yPos -= 11
-
-    yPos -= 12
-  }
-
-  // ===== TERMS & CONDITIONS SECTION =====
-  if (invoice.client) {
-    page.drawText('Terms & Conditions', { x: margin, y: yPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
-    yPos -= 12
-
-    // Wrap terms text
+  // ===== NOTES & TERMS SECTION (AT BOTTOM) =====
+  // Calculate height needed for terms section
+  let termsLines: string[] = []
+  if (invoice.client?.terms) {
     const maxWidth = contentWidth
     const terms = invoice.client.terms
     const words = terms.split(' ')
@@ -288,16 +297,58 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
       const textWidth = font.widthOfTextAtSize(testLine, 9)
 
       if (textWidth > maxWidth && line) {
-        page.drawText(line, { x: margin, y: yPos, size: 9, font, color: grayColor })
-        yPos -= 11
+        termsLines.push(line)
         line = word
       } else {
         line = testLine
       }
     }
+    if (line) termsLines.push(line)
+  }
 
-    if (line) {
-      page.drawText(line, { x: margin, y: yPos, size: 9, font, color: grayColor })
+  // Calculate total height needed for bottom sections
+  const paymentInfoLines = settings ? 9 : 0 // 7 fields + 2 spacing lines
+  const termsHeaderHeight = invoice.client?.terms ? 14 : 0
+  const termsContentHeight = termsLines.length * 11
+  const totalBottomHeight = (paymentInfoLines * 11) + termsHeaderHeight + termsContentHeight + 24
+
+  // Start from bottom of page
+  let bottomYPos = margin + totalBottomHeight
+
+  // ===== PAYMENT INFORMATION SECTION =====
+  if (settings) {
+    page.drawText('Payment Information', { x: margin, y: bottomYPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
+    bottomYPos -= 12
+
+    const infoSize = 9
+    const infoColor = grayColor
+
+    page.drawText(`Beneficiary Name: ${settings.beneficiary_name}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`Beneficiary CNPJ: ${settings.beneficiary_cnpj}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`SWIFT/BIC Code: ${settings.swift_code}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`Bank Address: ${settings.bank_address}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`Routing Number: ${settings.routing_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`Account Number: ${settings.account_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+    page.drawText(`Account Type: ${settings.account_type}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    bottomYPos -= 11
+
+    bottomYPos -= 12
+  }
+
+  // ===== TERMS & CONDITIONS SECTION =====
+  if (invoice.client?.terms) {
+    page.drawText('Terms & Conditions', { x: margin, y: bottomYPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
+    bottomYPos -= 12
+
+    for (const line of termsLines) {
+      page.drawText(line, { x: margin, y: bottomYPos, size: 9, font, color: grayColor })
+      bottomYPos -= 11
     }
   }
 
@@ -560,6 +611,35 @@ Deno.serve(handleCORS(async (req) => {
     } catch (error) {
       logger('Error generating PDF', { error: error.message }, 'ERROR')
     }
+  }
+
+  // Generate notes (payment information) and terms text
+  let notesText = ''
+  if (settings) {
+    notesText = `Payment Information\n\n`
+    notesText += `Beneficiary Name: ${settings.beneficiary_name}\n`
+    notesText += `Beneficiary CNPJ: ${settings.beneficiary_cnpj}\n`
+    notesText += `SWIFT/BIC Code: ${settings.swift_code}\n`
+    notesText += `Bank Address: ${settings.bank_address}\n`
+    notesText += `Routing Number: ${settings.routing_number}\n`
+    notesText += `Account Number: ${settings.account_number}\n`
+    notesText += `Account Type: ${settings.account_type}`
+  }
+  const termsText = invoice.client?.terms || ''
+
+  // Update invoice notes and terms
+  const { error: updateNotesError } = await supabaseClient
+    .from('invoices')
+    .update({
+      notes: notesText,
+      terms: termsText
+    })
+    .eq('id', invoiceId)
+
+  if (updateNotesError) {
+    logger('Error updating invoice notes/terms', { error: updateNotesError }, 'ERROR')
+  } else {
+    logger('Invoice notes and terms updated successfully', {}, 'INFO')
   }
 
   // Attach PDF to email if available

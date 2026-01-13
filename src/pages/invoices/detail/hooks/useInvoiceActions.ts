@@ -1,22 +1,26 @@
 import { useState, useEffect } from "react";
-import { useInvoice } from "./useInvoice";
 import { useMarkInvoiceAsPaid } from "./useMarkInvoiceAsPaid";
 import { useDeleteInvoice } from "./useDeleteInvoice";
 import { useSaveToGoogleDrive } from "./useSaveToGoogleDrive";
 import { useSendInvoiceEmail } from "./useSendInvoiceEmail";
 import { usePreviewInvoiceEmail } from "./usePreviewInvoiceEmail";
 import { getInvoicePDFSignedUrl } from "@/lib/supabase";
+import type { Invoice, Client, InvoiceItem } from "@shared/types";
+
+interface InvoiceWithRelations extends Invoice {
+  items: InvoiceItem[];
+  client: Client | null;
+}
 
 /**
  * Custom hook that encapsulates all invoice action logic
- * Eliminates prop drilling by managing data fetching and mutations internally
+ * Uses invoice data from context instead of fetching it
  */
-export function useInvoiceActions(invoiceId: string | undefined) {
+export function useInvoiceActions(invoiceId: string | undefined, invoice: InvoiceWithRelations | null) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [emailPreviewHtml, setEmailPreviewHtml] = useState<string>("");
   const [showEmailPreview, setShowEmailPreview] = useState(false);
 
-  const { data: invoice, isLoading } = useInvoice(invoiceId);
   const markAsPaidMutation = useMarkInvoiceAsPaid(invoiceId);
   const deleteMutation = useDeleteInvoice(invoiceId);
   const saveToGoogleDriveMutation = useSaveToGoogleDrive(invoiceId);
@@ -64,9 +68,7 @@ export function useInvoiceActions(invoiceId: string | undefined) {
   };
 
   return {
-    // Invoice data
-    invoice,
-    isLoading,
+    // Invoice data (derived from context)
     invoiceNumber: invoice?.invoice_number || '',
     status: invoice?.status || '',
     clientEmail,
