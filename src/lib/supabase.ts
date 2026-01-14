@@ -80,7 +80,7 @@ export async function getInvoices() {
       client:clients(*),
       items:invoice_items(*)
     `)
-    .order('created_at', { ascending: false })
+    .order('issue_date', { ascending: false })
 
   if (error) throw error
   return data
