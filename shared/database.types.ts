@@ -230,14 +230,13 @@ export type Database = {
           id: string
           invoice_number: string
           issue_date: string
-          notes: string | null
+          metadata: Json | null
           paid_at: string | null
           sent_at: string | null
           status: string
           subtotal: number
           tax: number
           tax_rate: number
-          terms: string | null
           total: number
         }
         Insert: {
@@ -248,14 +247,13 @@ export type Database = {
           id?: string
           invoice_number: string
           issue_date: string
-          notes?: string | null
+          metadata?: Json | null
           paid_at?: string | null
           sent_at?: string | null
           status?: string
           subtotal?: number
           tax?: number
           tax_rate?: number
-          terms?: string | null
           total?: number
         }
         Update: {
@@ -266,14 +264,13 @@ export type Database = {
           id?: string
           invoice_number?: string
           issue_date?: string
-          notes?: string | null
+          metadata?: Json | null
           paid_at?: string | null
           sent_at?: string | null
           status?: string
           subtotal?: number
           tax?: number
           tax_rate?: number
-          terms?: string | null
           total?: number
         }
         Relationships: [

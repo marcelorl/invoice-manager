@@ -70,7 +70,7 @@ function InvoiceDetailContent() {
 
       <div className="grid gap-6 lg:grid-cols-4">
         <div className="lg:col-span-3 space-y-6">
-          <InvoiceDetailsCard client={invoice.client} />
+          <InvoiceDetailsCard client={invoice.client} metadata={invoice.metadata} />
 
           <InvoiceLineItems
             items={invoice.items}
@@ -79,9 +79,7 @@ function InvoiceDetailContent() {
             total={invoice.total}
           />
 
-          {invoice.client?.terms && (
-            <InvoiceTermsCard terms={invoice.client.terms} />
-          )}
+          <InvoiceTermsCard terms={invoice.client?.terms} metadata={invoice.metadata} />
         </div>
 
         <div className="space-y-6">

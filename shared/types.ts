@@ -28,6 +28,45 @@ export type BusinessSettingsUpdate = Database['public']['Tables']['business_sett
 export type EmailTemplateUpdate = Database['public']['Tables']['email_templates']['Update']
 export type ReminderUpdate = Database['public']['Tables']['reminders']['Update']
 
+// Invoice metadata structure - historical snapshot at time of invoice generation
+export interface InvoiceMetadata {
+  // Client data snapshot
+  billTo: {
+    name: string
+    address: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+    email: string
+    cc_email?: string
+  }
+  // Business settings snapshot
+  business: {
+    company_name: string
+    owner_name: string
+    address: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+    email: string
+    phone: string
+    bank_name: string
+    bank_address: string
+    swift_code: string
+    routing_number: string
+    account_number: string
+    account_type: string
+    beneficiary_name: string
+    beneficiary_cnpj: string
+  }
+  // Terms and conditions
+  terms: string
+  // Payment information notes
+  notes: string
+}
+
 // Extended types for frontend use (combining related data)
 export type InvoiceWithClient = Invoice & {
   client: Client | null

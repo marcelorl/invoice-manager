@@ -151,6 +151,12 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Email template found', { templateId: template.id, templateName: template.name }, 'INFO')
 
+  // Use metadata if available, otherwise fall back to live data
+  const metadata = invoice.metadata
+  const billTo = metadata?.billTo || invoice.client
+  const business = metadata?.business || settings
+  const terms = metadata?.terms || invoice.client?.terms || 'Please make the payment by the due date.'
+
   // Prepare template data
   const templateData = {
     invoice_number: invoice.invoice_number,
@@ -161,36 +167,36 @@ Deno.serve(handleCORS(async (req) => {
     tax: parseFloat(invoice.tax).toFixed(2),
     total: formatCurrency(invoice.total),
     total_raw: parseFloat(invoice.total).toFixed(2),
-    terms: invoice.client?.terms || 'Please make the payment by the due date.',
+    terms: terms,
 
-    // Client data
-    client_name: invoice.client?.name || 'Client',
-    client_email: invoice.client?.target_email || '',
-    client_address: invoice.client?.address || '',
-    client_city: invoice.client?.city || '',
-    client_state: invoice.client?.state || '',
-    client_postal_code: invoice.client?.postal_code || '',
-    client_country: invoice.client?.country || '',
-    client_terms: invoice.client?.terms || '',
+    // Client data (from metadata or live)
+    client_name: billTo?.name || 'Client',
+    client_email: billTo?.email || billTo?.target_email || '',
+    client_address: billTo?.address || '',
+    client_city: billTo?.city || '',
+    client_state: billTo?.state || '',
+    client_postal_code: billTo?.postal_code || '',
+    client_country: billTo?.country || '',
+    client_terms: terms,
 
-    // Business settings data
-    company_name: settings?.company_name || 'Your Company',
-    owner_name: settings?.owner_name || '',
-    company_address: settings?.address || '',
-    company_city: settings?.city || '',
-    company_state: settings?.state || '',
-    company_postal_code: settings?.postal_code || '',
-    company_country: settings?.country || '',
-    company_email: settings?.email || '',
-    company_phone: settings?.phone || '',
-    beneficiary_name: settings?.beneficiary_name || '',
-    beneficiary_cnpj: settings?.beneficiary_cnpj || '',
-    swift_code: settings?.swift_code || '',
-    bank_name: settings?.bank_name || '',
-    bank_address: settings?.bank_address || '',
-    routing_number: settings?.routing_number || '',
-    account_number: settings?.account_number || '',
-    account_type: settings?.account_type || '',
+    // Business settings data (from metadata or live)
+    company_name: business?.company_name || 'Your Company',
+    owner_name: business?.owner_name || '',
+    company_address: business?.address || '',
+    company_city: business?.city || '',
+    company_state: business?.state || '',
+    company_postal_code: business?.postal_code || '',
+    company_country: business?.country || '',
+    company_email: business?.email || '',
+    company_phone: business?.phone || '',
+    beneficiary_name: business?.beneficiary_name || '',
+    beneficiary_cnpj: business?.beneficiary_cnpj || '',
+    swift_code: business?.swift_code || '',
+    bank_name: business?.bank_name || '',
+    bank_address: business?.bank_address || '',
+    routing_number: business?.routing_number || '',
+    account_number: business?.account_number || '',
+    account_type: business?.account_type || '',
   }
 
   // Replace placeholders in template body
