@@ -240,7 +240,10 @@ function InvoiceFormContent() {
       }
     }
 
-    // Generate notes from business settings
+    // Get selected client
+    const selectedClient = clients.find(c => c.id === data.client_id);
+
+    // Generate payment information notes
     let notesText = '';
     if (settings) {
       notesText = `Payment Information\n\n`;
@@ -254,9 +257,42 @@ function InvoiceFormContent() {
       notesText += `Account Type: ${settings.account_type}`;
     }
 
-    // Get terms from selected client
-    const selectedClient = clients.find(c => c.id === data.client_id);
     const termsText = selectedClient?.terms || '';
+
+    // Create metadata snapshot with all historical data
+    const metadata = {
+      billTo: {
+        name: selectedClient?.name || '',
+        address: selectedClient?.address || '',
+        city: selectedClient?.city || '',
+        state: selectedClient?.state || '',
+        postal_code: selectedClient?.postal_code || '',
+        country: selectedClient?.country || '',
+        email: selectedClient?.target_email || '',
+        cc_email: selectedClient?.cc_email || undefined,
+      },
+      business: {
+        company_name: settings?.company_name || '',
+        owner_name: settings?.owner_name || '',
+        address: settings?.address || '',
+        city: settings?.city || '',
+        state: settings?.state || '',
+        postal_code: settings?.postal_code || '',
+        country: settings?.country || '',
+        email: settings?.email || '',
+        phone: settings?.phone || '',
+        bank_name: settings?.bank_name || '',
+        bank_address: settings?.bank_address || '',
+        swift_code: settings?.swift_code || '',
+        routing_number: settings?.routing_number || '',
+        account_number: settings?.account_number || '',
+        account_type: settings?.account_type || '',
+        beneficiary_name: settings?.beneficiary_name || '',
+        beneficiary_cnpj: settings?.beneficiary_cnpj || '',
+      },
+      terms: termsText,
+      notes: notesText,
+    };
 
     const invoiceData = {
       invoice_number: data.invoice_number,
@@ -264,8 +300,7 @@ function InvoiceFormContent() {
       issue_date: data.issue_date,
       due_date: data.due_date,
       tax_rate: data.tax_rate || 0,
-      notes: notesText,
-      terms: termsText,
+      metadata: metadata,
       items: data.items.map((item) => ({
         description: item.description || "",
         raw_description: item.raw_description || null,

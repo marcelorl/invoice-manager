@@ -49,8 +49,14 @@ function formatDateShort(dateString: string): string {
   return `${month}/${day}/${shortYear}`
 }
 
-// Generate PDF from invoice data - matches InvoicePreview component exactly
-async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Array> {
+// Generate PDF from invoice data - uses metadata snapshot for historical accuracy
+async function generateInvoicePDF(invoice: any): Promise<Uint8Array> {
+  // Use metadata if available, otherwise fall back to live data
+  const metadata = invoice.metadata
+  const billTo = metadata?.billTo || invoice.client
+  const business = metadata?.business
+  const terms = metadata?.terms || invoice.client?.terms || ''
+
   const pdfDoc = await PDFDocument.create()
   const page = pdfDoc.addPage([612, 792]) // Letter size (8.5" x 11")
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
@@ -67,7 +73,7 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
 
   // ===== HEADER SECTION =====
   // Company name (left, bold, large)
-  page.drawText(settings?.company_name || 'Your Company', {
+  page.drawText(business?.company_name || 'Your Company', {
     x: margin,
     y: yPos,
     size: 18,
@@ -87,15 +93,15 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   yPos -= 18
 
   // Company details (gray text)
-  if (settings) {
-    page.drawText(settings.owner_name, { x: margin, y: yPos, size: 10, font, color: grayColor })
+  if (business) {
+    page.drawText(business.owner_name, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
-    page.drawText(settings.address, { x: margin, y: yPos, size: 10, font, color: grayColor })
+    page.drawText(business.address, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
-    const cityLine = `${settings.city}, ${settings.state} ${settings.postal_code}`
+    const cityLine = `${business.city}, ${business.state} ${business.postal_code}`
     page.drawText(cityLine, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
-    page.drawText(settings.country, { x: margin, y: yPos, size: 10, font, color: grayColor })
+    page.drawText(business.country, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
   }
 
@@ -107,16 +113,16 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   // Bill To (left side)
   page.drawText('BILL TO:', { x: margin, y: yPos, size: 9, font: boldFont, color: lightGrayColor })
   yPos -= 14
-  page.drawText(invoice.client?.name || 'Client', { x: margin, y: yPos, size: 11, font: boldFont, color: blackColor })
+  page.drawText(billTo?.name || 'Client', { x: margin, y: yPos, size: 11, font: boldFont, color: blackColor })
   yPos -= 14
 
-  if (invoice.client) {
-    page.drawText(invoice.client.address, { x: margin, y: yPos, size: 10, font, color: grayColor })
+  if (billTo) {
+    page.drawText(billTo.address, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
-    const cityLine = `${invoice.client.city}, ${invoice.client.state} ${invoice.client.postal_code}`
+    const cityLine = `${billTo.city}, ${billTo.state} ${billTo.postal_code}`
     page.drawText(cityLine, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
-    page.drawText(invoice.client.country, { x: margin, y: yPos, size: 10, font, color: grayColor })
+    page.drawText(billTo.country, { x: margin, y: yPos, size: 10, font, color: grayColor })
     yPos -= 12
   }
 
@@ -286,9 +292,8 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   // ===== NOTES & TERMS SECTION (AT BOTTOM) =====
   // Calculate height needed for terms section
   let termsLines: string[] = []
-  if (invoice.client?.terms) {
+  if (terms) {
     const maxWidth = contentWidth
-    const terms = invoice.client.terms
     const words = terms.split(' ')
     let line = ''
 
@@ -307,8 +312,8 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   }
 
   // Calculate total height needed for bottom sections
-  const paymentInfoLines = settings ? 9 : 0 // 7 fields + 2 spacing lines
-  const termsHeaderHeight = invoice.client?.terms ? 14 : 0
+  const paymentInfoLines = business ? 9 : 0 // 7 fields + 2 spacing lines
+  const termsHeaderHeight = terms ? 14 : 0
   const termsContentHeight = termsLines.length * 11
   const totalBottomHeight = (paymentInfoLines * 11) + termsHeaderHeight + termsContentHeight + 24
 
@@ -316,33 +321,33 @@ async function generateInvoicePDF(invoice: any, settings: any): Promise<Uint8Arr
   let bottomYPos = margin + totalBottomHeight
 
   // ===== PAYMENT INFORMATION SECTION =====
-  if (settings) {
+  if (business) {
     page.drawText('Payment Information', { x: margin, y: bottomYPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
     bottomYPos -= 12
 
     const infoSize = 9
     const infoColor = grayColor
 
-    page.drawText(`Beneficiary Name: ${settings.beneficiary_name}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Beneficiary Name: ${business.beneficiary_name}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`Beneficiary CNPJ: ${settings.beneficiary_cnpj}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Beneficiary CNPJ: ${business.beneficiary_cnpj}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`SWIFT/BIC Code: ${settings.swift_code}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`SWIFT/BIC Code: ${business.swift_code}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`Bank Address: ${settings.bank_address}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Bank Address: ${business.bank_address}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`Routing Number: ${settings.routing_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Routing Number: ${business.routing_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`Account Number: ${settings.account_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Account Number: ${business.account_number}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
-    page.drawText(`Account Type: ${settings.account_type}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
+    page.drawText(`Account Type: ${business.account_type}`, { x: margin, y: bottomYPos, size: infoSize, font, color: infoColor })
     bottomYPos -= 11
 
     bottomYPos -= 12
   }
 
   // ===== TERMS & CONDITIONS SECTION =====
-  if (invoice.client?.terms) {
+  if (terms) {
     page.drawText('Terms & Conditions', { x: margin, y: bottomYPos, size: 10, font: boldFont, color: rgb(0.3, 0.3, 0.3) })
     bottomYPos -= 12
 
@@ -506,6 +511,12 @@ Deno.serve(handleCORS(async (req) => {
 
     logger('Email template found', { templateId: template.id, templateName: template.name }, 'INFO')
 
+    // Use metadata if available, otherwise fall back to live data
+    const metadata = invoice.metadata
+    const billTo = metadata?.billTo || invoice.client
+    const business = metadata?.business || settings
+    const terms = metadata?.terms || invoice.client?.terms || 'Please make the payment by the due date.'
+
     // Prepare template data
     const templateData = {
       invoice_number: invoice.invoice_number,
@@ -516,36 +527,36 @@ Deno.serve(handleCORS(async (req) => {
       tax: parseFloat(invoice.tax).toFixed(2),
       total: formatCurrency(invoice.total),
       total_raw: parseFloat(invoice.total).toFixed(2),
-      terms: invoice.client?.terms || 'Please make the payment by the due date.',
+      terms: terms,
 
-      // Client data
-      client_name: invoice.client?.name || 'Client',
-      client_email: invoice.client?.target_email || '',
-      client_address: invoice.client?.address || '',
-      client_city: invoice.client?.city || '',
-      client_state: invoice.client?.state || '',
-      client_postal_code: invoice.client?.postal_code || '',
-      client_country: invoice.client?.country || '',
-      client_terms: invoice.client?.terms || '',
+      // Client data (from metadata or live)
+      client_name: billTo?.name || 'Client',
+      client_email: billTo?.email || '',
+      client_address: billTo?.address || '',
+      client_city: billTo?.city || '',
+      client_state: billTo?.state || '',
+      client_postal_code: billTo?.postal_code || '',
+      client_country: billTo?.country || '',
+      client_terms: terms,
 
-      // Business settings data
-      company_name: settings?.company_name || 'Your Company',
-      owner_name: settings?.owner_name || '',
-      company_address: settings?.address || '',
-      company_city: settings?.city || '',
-      company_state: settings?.state || '',
-      company_postal_code: settings?.postal_code || '',
-      company_country: settings?.country || '',
-      company_email: settings?.email || '',
-      company_phone: settings?.phone || '',
-      beneficiary_name: settings?.beneficiary_name || '',
-      beneficiary_cnpj: settings?.beneficiary_cnpj || '',
-      swift_code: settings?.swift_code || '',
-      bank_name: settings?.bank_name || '',
-      bank_address: settings?.bank_address || '',
-      routing_number: settings?.routing_number || '',
-      account_number: settings?.account_number || '',
-      account_type: settings?.account_type || '',
+      // Business settings data (from metadata or live)
+      company_name: business?.company_name || 'Your Company',
+      owner_name: business?.owner_name || '',
+      company_address: business?.address || '',
+      company_city: business?.city || '',
+      company_state: business?.state || '',
+      company_postal_code: business?.postal_code || '',
+      company_country: business?.country || '',
+      company_email: business?.email || '',
+      company_phone: business?.phone || '',
+      beneficiary_name: business?.beneficiary_name || '',
+      beneficiary_cnpj: business?.beneficiary_cnpj || '',
+      swift_code: business?.swift_code || '',
+      bank_name: business?.bank_name || '',
+      bank_address: business?.bank_address || '',
+      routing_number: business?.routing_number || '',
+      account_number: business?.account_number || '',
+      account_type: business?.account_type || '',
     }
 
     // Replace placeholders in template body and subject
@@ -580,7 +591,7 @@ Deno.serve(handleCORS(async (req) => {
   if (!pdfBytes) {
     logger('Generating PDF for invoice', { invoiceNumber: invoice.invoice_number }, 'INFO')
     try {
-      pdfBytes = await generateInvoicePDF(invoice, settings)
+      pdfBytes = await generateInvoicePDF(invoice)
       logger('PDF generated successfully', { size: pdfBytes.length }, 'INFO')
 
       // Save generated PDF to storage
@@ -613,33 +624,73 @@ Deno.serve(handleCORS(async (req) => {
     }
   }
 
-  // Generate notes (payment information) and terms text
-  let notesText = ''
-  if (settings) {
-    notesText = `Payment Information\n\n`
-    notesText += `Beneficiary Name: ${settings.beneficiary_name}\n`
-    notesText += `Beneficiary CNPJ: ${settings.beneficiary_cnpj}\n`
-    notesText += `SWIFT/BIC Code: ${settings.swift_code}\n`
-    notesText += `Bank Address: ${settings.bank_address}\n`
-    notesText += `Routing Number: ${settings.routing_number}\n`
-    notesText += `Account Number: ${settings.account_number}\n`
-    notesText += `Account Type: ${settings.account_type}`
-  }
-  const termsText = invoice.client?.terms || ''
+  // Populate metadata if it doesn't exist (for old invoices)
+  if (!invoice.metadata && (settings || invoice.client)) {
+    logger('Populating metadata for invoice without metadata', { invoiceId }, 'INFO')
 
-  // Update invoice notes and terms
-  const { error: updateNotesError } = await supabaseClient
-    .from('invoices')
-    .update({
+    // Generate payment information notes
+    let notesText = ''
+    if (settings) {
+      notesText = `Payment Information\n\n`
+      notesText += `Beneficiary Name: ${settings.beneficiary_name}\n`
+      notesText += `CNPJ: ${settings.beneficiary_cnpj}\n`
+      notesText += `SWIFT/BIC Code: ${settings.swift_code}\n`
+      notesText += `Bank Name: ${settings.bank_name}\n`
+      notesText += `Bank Address: ${settings.bank_address}\n`
+      notesText += `Routing Number: ${settings.routing_number}\n`
+      notesText += `Account Number: ${settings.account_number}\n`
+      notesText += `Account Type: ${settings.account_type}`
+    }
+
+    const termsText = invoice.client?.terms || ''
+
+    const metadata = {
+      billTo: {
+        name: invoice.client?.name || '',
+        address: invoice.client?.address || '',
+        city: invoice.client?.city || '',
+        state: invoice.client?.state || '',
+        postal_code: invoice.client?.postal_code || '',
+        country: invoice.client?.country || '',
+        email: invoice.client?.target_email || '',
+        cc_email: invoice.client?.cc_email || undefined,
+      },
+      business: {
+        company_name: settings?.company_name || '',
+        owner_name: settings?.owner_name || '',
+        address: settings?.address || '',
+        city: settings?.city || '',
+        state: settings?.state || '',
+        postal_code: settings?.postal_code || '',
+        country: settings?.country || '',
+        email: settings?.email || '',
+        phone: settings?.phone || '',
+        bank_name: settings?.bank_name || '',
+        bank_address: settings?.bank_address || '',
+        swift_code: settings?.swift_code || '',
+        routing_number: settings?.routing_number || '',
+        account_number: settings?.account_number || '',
+        account_type: settings?.account_type || '',
+        beneficiary_name: settings?.beneficiary_name || '',
+        beneficiary_cnpj: settings?.beneficiary_cnpj || '',
+      },
+      terms: termsText,
       notes: notesText,
-      terms: termsText
-    })
-    .eq('id', invoiceId)
+    }
 
-  if (updateNotesError) {
-    logger('Error updating invoice notes/terms', { error: updateNotesError }, 'ERROR')
-  } else {
-    logger('Invoice notes and terms updated successfully', {}, 'INFO')
+    // Update invoice with metadata
+    const { error: updateMetadataError } = await supabaseClient
+      .from('invoices')
+      .update({ metadata: metadata })
+      .eq('id', invoiceId)
+
+    if (updateMetadataError) {
+      logger('Error updating invoice metadata', { error: updateMetadataError }, 'ERROR')
+    } else {
+      logger('Invoice metadata populated successfully', {}, 'INFO')
+      // Update local invoice object so PDF generation uses it
+      invoice.metadata = metadata
+    }
   }
 
   // Attach PDF to email if available
