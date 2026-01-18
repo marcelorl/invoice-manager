@@ -429,11 +429,11 @@ function InvoiceFormContent() {
                   name="client_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client</FormLabel>
+                      <FormLabel>Client <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-client">
-                            <SelectValue placeholder="Select a client" />
+                            <SelectValue placeholder="Select a client *" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -517,14 +517,13 @@ function InvoiceFormContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr_auto] gap-4 text-sm font-medium text-muted-foreground mb-2">
-                  <div>Internal Notes</div>
-                  <div>Client Summary</div>
-                  <div>Date</div>
-                  <div className="text-center">Qty</div>
-                  <div className="text-right">Rate</div>
-                  <div className="text-right">Amount</div>
-                  <div></div>
+                <div className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr] gap-4 text-sm font-medium text-muted-foreground mb-2">
+                  <div className="min-w-0 w-full max-w-full">Internal Notes</div>
+                  <div className="min-w-0 w-full max-w-full">Client Summary</div>
+                  <div className="min-w-0 w-full max-w-full">Date</div>
+                  <div className="min-w-0 w-full max-w-full">Qty</div>
+                  <div className="min-w-0 w-full max-w-full">Rate</div>
+                  <div className="min-w-0 w-full max-w-full">Amount</div>
                 </div>
 
                 {fields.map((field, index) => {
@@ -533,20 +532,20 @@ function InvoiceFormContent() {
                   const amount = qty * rate;
 
                   return (
-                    <div key={field.id} className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr_auto] gap-4 items-start border-b pb-4 mb-4">
+                    <div key={field.id} className="grid grid-cols-[3fr_3fr_1fr_1fr_1fr_1fr] gap-4 items-start border-b pb-4 mb-4">
                       {/* Raw Description (Internal) */}
-                      <div>
+                      <div className="min-w-0 w-full max-w-full">
                         <FormField
                           control={form.control}
                           name={`items.${index}.raw_description`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="w-full max-w-full">
                               <FormControl>
                                 <Textarea
                                   {...field}
                                   rows={2}
                                   placeholder="Detailed work notes"
-                                  className="resize-none text-sm"
+                                  className="resize-none text-sm w-full max-w-full"
                                   data-testid={`input-item-raw-description-${index}`}
                                 />
                               </FormControl>
@@ -557,18 +556,18 @@ function InvoiceFormContent() {
                       </div>
 
                       {/* Client-Facing Description */}
-                      <div className="relative">
+                      <div className="relative min-w-0 w-full max-w-full">
                         <FormField
                           control={form.control}
                           name={`items.${index}.description`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="w-full max-w-full">
                               <FormControl>
                                 <Textarea
                                   {...field}
                                   rows={2}
                                   placeholder={requireDescription ? "Client summary *" : "Client summary (optional)"}
-                                  className="resize-none text-sm"
+                                  className="resize-none text-sm w-full max-w-full"
                                   data-testid={`input-item-description-${index}`}
                                   disabled={generatingIndex === index}
                                 />
@@ -585,18 +584,18 @@ function InvoiceFormContent() {
                       </div>
 
                       {/* Date Column */}
-                      <div>
+                      <div className="min-w-0 w-full max-w-full">
                         <FormField
                           control={form.control}
                           name={`items.${index}.item_date`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="w-full max-w-full">
                               <FormControl>
                                 <Input
                                   type="date"
                                   {...field}
                                   lang="en-US"
-                                  className="h-10"
+                                  className="h-10 w-full max-w-full"
                                   data-testid={`input-item-date-${index}`}
                                 />
                               </FormControl>
@@ -607,18 +606,18 @@ function InvoiceFormContent() {
                       </div>
 
                       {/* Quantity Column */}
-                      <div>
+                      <div className="min-w-0 w-full max-w-full">
                         <FormField
                           control={form.control}
                           name={`items.${index}.quantity`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="w-full max-w-full">
                               <FormControl>
                                 <Input
                                   type="number"
                                   min={1}
                                   {...field}
-                                  className="text-center h-10"
+                                  className="h-10 w-full max-w-full"
                                   data-testid={`input-item-quantity-${index}`}
                                 />
                               </FormControl>
@@ -629,19 +628,19 @@ function InvoiceFormContent() {
                       </div>
 
                       {/* Rate Column */}
-                      <div>
+                      <div className="min-w-0 w-full max-w-full">
                         <FormField
                           control={form.control}
                           name={`items.${index}.rate`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="w-full max-w-full">
                               <FormControl>
                                 <Input
                                   type="number"
                                   min={0}
                                   step="0.01"
                                   {...field}
-                                  className="text-right h-10"
+                                  className="h-10 w-full max-w-full"
                                   data-testid={`input-item-rate-${index}`}
                                 />
                               </FormControl>
@@ -651,15 +650,11 @@ function InvoiceFormContent() {
                         />
                       </div>
 
-                      {/* Amount Column */}
-                      <div className="flex items-center justify-end h-10">
+                      {/* Amount Column with Delete Button */}
+                      <div className="flex items-center justify-between h-10 min-w-0 w-full max-w-full">
                         <span className="font-semibold tabular-nums text-sm">
                           ${amount.toFixed(2)}
                         </span>
-                      </div>
-
-                      {/* Delete Button Column */}
-                      <div className="flex justify-end">
                         <Button
                           type="button"
                           variant="ghost"
@@ -667,7 +662,7 @@ function InvoiceFormContent() {
                           onClick={() => remove(index)}
                           disabled={fields.length === 1}
                           data-testid={`button-remove-item-${index}`}
-                          className="h-10 w-10"
+                          className="h-8 w-8 flex-shrink-0"
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>

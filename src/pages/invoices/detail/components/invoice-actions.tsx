@@ -37,6 +37,7 @@ import {
   Trash2,
   CloudUpload,
   Eye,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useInvoiceContext } from "@/contexts/InvoiceContext";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
@@ -50,7 +51,9 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [showPaidDateDialog, setShowPaidDateDialog] = useState(false);
+  const [showTransferredDateDialog, setShowTransferredDateDialog] = useState(false);
   const [paidDate, setPaidDate] = useState(formatDateForInput(new Date()));
+  const [transferredDate, setTransferredDate] = useState(formatDateForInput(new Date()));
 
   // Get invoice from context
   const { invoice } = useInvoiceContext();
@@ -62,11 +65,13 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
     clientEmail,
     pdfUrl,
     onMarkAsPaid,
+    onMarkAsTransferred,
     onDelete,
     onSaveToGoogleDrive,
     onSendEmail,
     onPreviewEmail,
     isMarkingPaid,
+    isMarkingTransferred,
     isSavingToGoogleDrive,
     isSendingEmail,
     isLoadingPreview,
@@ -86,6 +91,17 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
           Mark as Paid
         </Button>
       )}
+
+      <Button
+        variant="outline"
+        className="gap-2"
+        onClick={() => setShowTransferredDateDialog(true)}
+        disabled={isMarkingTransferred}
+        data-testid="button-mark-transferred"
+      >
+        <ArrowRightLeft className="h-4 w-4" />
+        Mark as Transferred
+      </Button>
 
       <Button
         variant="outline"
@@ -247,6 +263,40 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
               disabled={isMarkingPaid}
             >
               Mark as Paid
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTransferredDateDialog} onOpenChange={setShowTransferredDateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark Invoice as Transferred</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="transferred-date">Transfer Date</Label>
+              <Input
+                id="transferred-date"
+                type="date"
+                value={transferredDate}
+                onChange={(e) => setTransferredDate(e.target.value)}
+                lang="en-US"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTransferredDateDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                onMarkAsTransferred(transferredDate);
+                setShowTransferredDateDialog(false);
+              }}
+              disabled={isMarkingTransferred}
+            >
+              Mark as Transferred
             </Button>
           </DialogFooter>
         </DialogContent>

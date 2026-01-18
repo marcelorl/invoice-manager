@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMarkInvoiceAsPaid } from "./useMarkInvoiceAsPaid";
+import { useMarkInvoiceAsTransferred } from "./useMarkInvoiceAsTransferred";
 import { useDeleteInvoice } from "./useDeleteInvoice";
 import { useSaveToGoogleDrive } from "./useSaveToGoogleDrive";
 import { useSendInvoiceEmail } from "./useSendInvoiceEmail";
@@ -22,6 +23,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
   const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   const markAsPaidMutation = useMarkInvoiceAsPaid(invoiceId);
+  const markAsTransferredMutation = useMarkInvoiceAsTransferred(invoiceId);
   const deleteMutation = useDeleteInvoice(invoiceId);
   const saveToGoogleDriveMutation = useSaveToGoogleDrive(invoiceId);
   const sendEmailMutation = useSendInvoiceEmail(invoiceId);
@@ -47,6 +49,8 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
 
   // Action handlers
   const handleMarkAsPaid = (paidDate: string) => markAsPaidMutation.mutate(paidDate);
+
+  const handleMarkAsTransferred = (transferredDate: string) => markAsTransferredMutation.mutate(transferredDate);
 
   const handleDelete = () => deleteMutation.mutate();
 
@@ -77,6 +81,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
 
     // Action handlers
     onMarkAsPaid: handleMarkAsPaid,
+    onMarkAsTransferred: handleMarkAsTransferred,
     onDelete: handleDelete,
     onSaveToGoogleDrive: handleSaveToGoogleDrive,
     onSendEmail: handleSendEmail,
@@ -84,6 +89,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
 
     // Loading states
     isMarkingPaid: markAsPaidMutation.isPending,
+    isMarkingTransferred: markAsTransferredMutation.isPending,
     isSavingToGoogleDrive: saveToGoogleDriveMutation.isPending,
     isSendingEmail: sendEmailMutation.isPending,
     isLoadingPreview: previewEmailMutation.isPending,

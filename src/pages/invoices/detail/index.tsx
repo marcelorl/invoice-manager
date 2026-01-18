@@ -88,6 +88,7 @@ function InvoiceDetailContent() {
             dueDate={invoice.due_date}
             sentAt={invoice.sent_at}
             paidAt={invoice.paid_at}
+            transferredAt={invoice.transferred_at}
           />
         </div>
       </div>
