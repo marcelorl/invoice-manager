@@ -18,9 +18,9 @@ export type Database = {
       graphql: {
         Args: {
           extensions?: Json
-          variables?: Json
-          query?: string
           operationName?: string
+          query?: string
+          variables?: Json
         }
         Returns: Json
       }
@@ -229,7 +229,6 @@ export type Database = {
           file_path: string | null
           id: string
           invoice_id: number
-          invoice_number: string
           issue_date: string
           metadata: Json | null
           paid_at: string | null
@@ -239,6 +238,7 @@ export type Database = {
           tax: number
           tax_rate: number
           total: number
+          transferred_at: string | null
         }
         Insert: {
           client_id?: string | null
@@ -247,7 +247,6 @@ export type Database = {
           file_path?: string | null
           id?: string
           invoice_id: number
-          invoice_number: string
           issue_date: string
           metadata?: Json | null
           paid_at?: string | null
@@ -257,6 +256,7 @@ export type Database = {
           tax?: number
           tax_rate?: number
           total?: number
+          transferred_at?: string | null
         }
         Update: {
           client_id?: string | null
@@ -265,7 +265,6 @@ export type Database = {
           file_path?: string | null
           id?: string
           invoice_id?: number
-          invoice_number?: string
           issue_date?: string
           metadata?: Json | null
           paid_at?: string | null
@@ -275,6 +274,7 @@ export type Database = {
           tax?: number
           tax_rate?: number
           total?: number
+          transferred_at?: string | null
         }
         Relationships: [
           {

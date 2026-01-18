@@ -1,15 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { Mail, Calendar, CheckCircle } from "lucide-react";
+import { Mail, Calendar, CheckCircle, ArrowRightLeft } from "lucide-react";
 
 interface InvoiceInfoSidebarProps {
   issueDate: string;
   dueDate: string;
   sentAt?: string | null;
   paidAt?: string | null;
+  transferredAt?: string | null;
 }
 
-export function InvoiceInfoSidebar({ issueDate, dueDate, sentAt, paidAt }: InvoiceInfoSidebarProps) {
+export function InvoiceInfoSidebar({ issueDate, dueDate, sentAt, paidAt, transferredAt }: InvoiceInfoSidebarProps) {
   return (
     <Card>
       <CardHeader>
@@ -45,6 +46,15 @@ export function InvoiceInfoSidebar({ issueDate, dueDate, sentAt, paidAt }: Invoi
             <div>
               <p className="text-xs text-muted-foreground">Paid</p>
               <p className="text-sm font-medium">{formatDate(paidAt)}</p>
+            </div>
+          </div>
+        )}
+        {transferredAt && (
+          <div className="flex items-center gap-3">
+            <ArrowRightLeft className="h-4 w-4 text-blue-600" />
+            <div>
+              <p className="text-xs text-muted-foreground">Transferred</p>
+              <p className="text-sm font-medium">{formatDate(transferredAt)}</p>
             </div>
           </div>
         )}

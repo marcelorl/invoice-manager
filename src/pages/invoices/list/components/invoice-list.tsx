@@ -54,7 +54,7 @@ export function InvoiceList() {
   const filteredInvoices = invoices?.filter((invoice) => {
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     const matchesSearch =
-      invoice.invoice_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(invoice.invoice_id).toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.client?.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });

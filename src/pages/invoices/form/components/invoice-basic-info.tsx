@@ -48,11 +48,11 @@ export function InvoiceBasicInfo({ control, clients }: InvoiceBasicInfoProps) {
           name="client_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Client</FormLabel>
+              <FormLabel>Client <span className="text-destructive">*</span></FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger data-testid="select-client">
-                    <SelectValue placeholder="Select a client" />
+                    <SelectValue placeholder="Select a client *" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

@@ -308,6 +308,28 @@ export async function markInvoiceAsPaid(id: string, paidDate: string) {
   return data
 }
 
+export async function markInvoiceAsTransferred(id: string, transferredDate: string) {
+  // Parse YYYY-MM-DD as local date and convert to ISO timestamp
+  const parsedDate = parse(transferredDate, 'yyyy-MM-dd', new Date())
+  const transferredAtTimestamp = parsedDate.toISOString()
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .update({
+      transferred_at: transferredAtTimestamp,
+    })
+    .eq('id', id)
+    .select(`
+      *,
+      client:clients(*),
+      items:invoice_items(*)
+    `)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 // ============================================================================
 // BUSINESS SETTINGS
 // ============================================================================
