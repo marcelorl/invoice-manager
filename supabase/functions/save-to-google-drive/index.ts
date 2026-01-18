@@ -68,7 +68,7 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Invoice fetched successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     clientName: invoice.client?.name
   }, 'INFO')
 
@@ -109,7 +109,7 @@ Deno.serve(handleCORS(async (req) => {
   // Check if invoice has a PDF file in storage
   logger('Checking if invoice has PDF file', { filePath: invoice.file_path }, 'INFO')
   if (!invoice.file_path) {
-    logger('Invoice PDF not generated yet', { invoiceNumber: invoice.invoice_number }, 'ERROR')
+    logger('Invoice PDF not generated yet', { invoiceNumber: invoice.invoice_id }, 'ERROR')
     return new Response(
       JSON.stringify({ error: 'Invoice PDF has not been generated yet. Please generate the PDF first.' }),
       {
@@ -211,7 +211,7 @@ Deno.serve(handleCORS(async (req) => {
   logger('Google access token obtained successfully', {}, 'INFO')
 
   // Prepare file metadata
-  const fileName = `${invoice.invoice_number}.pdf`
+  const fileName = `${invoice.invoice_id}.pdf`
   const metadata = {
     name: fileName,
     parents: [folderId],
@@ -221,7 +221,7 @@ Deno.serve(handleCORS(async (req) => {
   logger('Preparing file upload to Google Drive', {
     fileName,
     folderId,
-    invoiceNumber: invoice.invoice_number
+    invoiceNumber: invoice.invoice_id
   }, 'INFO')
 
   // Upload to Google Drive using multipart upload
@@ -277,19 +277,19 @@ Deno.serve(handleCORS(async (req) => {
   logger('File uploaded to Google Drive successfully', {
     fileId: uploadResult.id,
     fileName,
-    invoiceNumber: invoice.invoice_number
+    invoiceNumber: invoice.invoice_id
   }, 'INFO')
 
   const response = {
     success: true,
     fileId: uploadResult.id,
     fileName: fileName,
-    message: `Invoice ${invoice.invoice_number} saved to Google Drive successfully`,
+    message: `Invoice ${invoice.invoice_id} saved to Google Drive successfully`,
   }
 
   logger('Save to Google Drive function completed successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     fileId: uploadResult.id,
     fileName
   }, 'INFO')

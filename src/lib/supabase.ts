@@ -109,7 +109,7 @@ export async function getNextInvoiceNumber(clientId?: string): Promise<string> {
 
   const { data, error } = await supabase
     .from('invoices')
-    .select('invoice_number')
+    .select('invoice_id')
     .eq('client_id', clientId)
 
   if (error) throw error
@@ -123,12 +123,9 @@ export async function getNextInvoiceNumber(clientId?: string): Promise<string> {
   let maxNumber = 0
 
   data.forEach(invoice => {
-    const numberMatch = invoice.invoice_number.match(/\d+/)
-    if (numberMatch) {
-      const num = parseInt(numberMatch[0], 10)
-      if (num > maxNumber) {
-        maxNumber = num
-      }
+    const num = Number(invoice.invoice_id)
+    if (num > maxNumber) {
+      maxNumber = num
     }
   })
 

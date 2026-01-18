@@ -77,7 +77,7 @@ export function FridayReminder() {
                     <div className="flex items-center justify-between text-sm hover-elevate p-2 rounded cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-3 w-3 text-red-600" />
-                        <span className="font-medium">{inv.invoice_number}</span>
+                        <span className="font-medium">{inv.invoice_id}</span>
                         <span className="text-muted-foreground">- {inv.client?.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export function FridayReminder() {
                     <div className="flex items-center justify-between text-sm hover-elevate p-2 rounded cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-3 w-3 text-amber-600" />
-                        <span className="font-medium">{inv.invoice_number}</span>
+                        <span className="font-medium">{inv.invoice_id}</span>
                         <span className="text-muted-foreground">- {inv.client?.name}</span>
                       </div>
                       <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">

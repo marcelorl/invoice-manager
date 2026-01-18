@@ -44,7 +44,7 @@ function InvoiceFormContent() {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      invoice_number: "1",
+      invoice_id: "1",
       client_id: "",
       issue_date: formatDateForInput(new Date()),
       due_date: formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
@@ -73,7 +73,7 @@ function InvoiceFormContent() {
   // Set the next invoice number when creating new invoice or when client changes
   useEffect(() => {
     if (!isEditing && !isDuplicating && nextInvoiceNumber) {
-      form.setValue('invoice_number', nextInvoiceNumber);
+      form.setValue('invoice_id', nextInvoiceNumber);
     }
   }, [nextInvoiceNumber, isEditing, isDuplicating, form]);
 
@@ -81,7 +81,7 @@ function InvoiceFormContent() {
   useEffect(() => {
     if (invoice && isEditing) {
       form.reset({
-        invoice_number: invoice.invoice_number,
+        invoice_id: invoice.invoice_id,
         client_id: invoice.client_id || "",
         issue_date: formatDateForInput(invoice.issue_date),
         due_date: formatDateForInput(invoice.due_date),
@@ -104,7 +104,7 @@ function InvoiceFormContent() {
       const today = formatDateForInput(new Date());
 
       form.reset({
-        invoice_number: nextInvoiceNumber,
+        invoice_id: nextInvoiceNumber,
         client_id: invoice.client_id || "",
         issue_date: today,
         due_date: formatDateForInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
@@ -295,7 +295,7 @@ function InvoiceFormContent() {
     };
 
     const invoiceData = {
-      invoice_number: data.invoice_number,
+      invoice_id: data.invoice_id,
       client_id: data.client_id,
       issue_date: data.issue_date,
       due_date: data.due_date,
@@ -412,7 +412,7 @@ function InvoiceFormContent() {
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="invoice_number"
+                  name="invoice_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Invoice Number</FormLabel>

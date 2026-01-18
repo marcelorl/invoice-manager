@@ -54,7 +54,7 @@ export function InvoiceList() {
   const filteredInvoices = invoices?.filter((invoice) => {
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     const matchesSearch =
-      invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.invoice_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.client?.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
@@ -132,7 +132,7 @@ export function InvoiceList() {
                     <TableCell className="font-medium">
                       <Link href={`/invoices/${invoice.id}`}>
                         <span className="text-primary cursor-pointer hover:underline">
-                          {invoice.invoice_number}
+                          {invoice.invoice_id}
                         </span>
                       </Link>
                     </TableCell>
@@ -193,7 +193,7 @@ export function InvoiceList() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete invoice {invoice.invoice_number} and all associated data.
+                                  This action cannot be undone. This will permanently delete invoice {invoice.invoice_id} and all associated data.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

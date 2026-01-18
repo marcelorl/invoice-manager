@@ -51,7 +51,7 @@ export function RecentInvoices() {
                 >
                   <div className="flex items-center gap-4">
                     <div>
-                      <p className="text-sm font-medium">{invoice.invoice_number}</p>
+                      <p className="text-sm font-medium">{invoice.invoice_id}</p>
                       <p className="text-xs text-muted-foreground">
                         {invoice.client?.name || "No client"}
                       </p>

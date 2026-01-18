@@ -9,7 +9,7 @@ export const invoiceItemSchema = z.object({
 });
 
 export const invoiceFormSchema = z.object({
-  invoice_number: z.string().min(1, "Invoice number is required"),
+  invoice_id: z.string().min(1, "Invoice number is required"),
   client_id: z.string().min(1, "Client is required"),
   issue_date: z.string().min(1, "Issue date is required"),
   due_date: z.string().min(1, "Due date is required"),

@@ -69,7 +69,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
 
   return {
     // Invoice data (derived from context)
-    invoiceNumber: invoice?.invoice_number || '',
+    invoiceNumber: invoice?.invoice_id || '',
     status: invoice?.status || '',
     clientEmail,
     hasGoogleDriveFolder,

@@ -56,7 +56,7 @@ function InvoiceDetailContent() {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold">{invoice.invoice_number}</h1>
+              <h1 className="text-2xl font-semibold">{invoice.invoice_id}</h1>
               <StatusBadge status={invoice.status} />
             </div>
             <p className="text-muted-foreground">

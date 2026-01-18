@@ -18,9 +18,9 @@ export type Database = {
       graphql: {
         Args: {
           extensions?: Json
-          operationName?: string
-          query?: string
           variables?: Json
+          query?: string
+          operationName?: string
         }
         Returns: Json
       }
@@ -228,6 +228,7 @@ export type Database = {
           due_date: string
           file_path: string | null
           id: string
+          invoice_id: number
           invoice_number: string
           issue_date: string
           metadata: Json | null
@@ -245,6 +246,7 @@ export type Database = {
           due_date: string
           file_path?: string | null
           id?: string
+          invoice_id: number
           invoice_number: string
           issue_date: string
           metadata?: Json | null
@@ -262,6 +264,7 @@ export type Database = {
           due_date?: string
           file_path?: string | null
           id?: string
+          invoice_id?: number
           invoice_number?: string
           issue_date?: string
           metadata?: Json | null

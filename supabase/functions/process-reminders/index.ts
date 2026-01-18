@@ -239,7 +239,7 @@ Deno.serve(handleCORS(async (req) => {
     for (const invoice of invoices) {
       emailHtml += `
         <div class="invoice-item">
-          <span class="invoice-number">${invoice.invoice_number}</span>
+          <span class="invoice-number">${invoice.invoice_id}</span>
           <span style="float: right;">${formatCurrency(invoice.total)}</span>
           <br>
           <span style="font-size: 12px; color: #6b7280;">Due: ${formatDate(invoice.due_date)}</span>

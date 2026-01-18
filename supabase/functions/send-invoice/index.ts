@@ -132,7 +132,7 @@ async function generateInvoicePDF(invoice: any): Promise<Uint8Array> {
   let detailY = billToY
 
   page.drawText('Invoice#', { x: rightColX, y: detailY, size: 10, font, color: lightGrayColor })
-  page.drawText(invoice.invoice_number, { x: valueColX, y: detailY, size: 10, font: boldFont, color: blackColor })
+  page.drawText(invoice.invoice_id, { x: valueColX, y: detailY, size: 10, font: boldFont, color: blackColor })
   detailY -= 14
 
   page.drawText('Invoice Date', { x: rightColX, y: detailY, size: 10, font, color: lightGrayColor })
@@ -416,7 +416,7 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Invoice fetched successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     clientName: invoice.client?.name,
     itemsCount: invoice.items?.length
   }, 'INFO')
@@ -455,7 +455,7 @@ Deno.serve(handleCORS(async (req) => {
 
   // Prepare common template data for placeholder replacement
   const commonTemplateData = {
-    invoice_number: invoice.invoice_number,
+    invoice_number: invoice.invoice_id,
     invoice_date: formatDate(invoice.issue_date),
     due_date: formatDate(invoice.due_date),
     amount: formatCurrency(invoice.total),
@@ -519,7 +519,7 @@ Deno.serve(handleCORS(async (req) => {
 
     // Prepare template data
     const templateData = {
-      invoice_number: invoice.invoice_number,
+      invoice_number: invoice.invoice_id,
       invoice_date: formatDate(invoice.issue_date),
       due_date: formatDate(invoice.due_date),
       amount: formatCurrency(invoice.total),
@@ -581,7 +581,7 @@ Deno.serve(handleCORS(async (req) => {
     if (!downloadError && pdfData) {
       const arrayBuffer = await pdfData.arrayBuffer()
       pdfBytes = new Uint8Array(arrayBuffer)
-      logger('PDF downloaded successfully', { invoiceNumber: invoice.invoice_number, size: pdfBytes.length }, 'INFO')
+      logger('PDF downloaded successfully', { invoiceNumber: invoice.invoice_id, size: pdfBytes.length }, 'INFO')
     } else {
       logger('Could not download PDF for attachment', { error: downloadError }, 'WARNING')
     }
@@ -589,13 +589,13 @@ Deno.serve(handleCORS(async (req) => {
 
   // If no PDF exists, generate one
   if (!pdfBytes) {
-    logger('Generating PDF for invoice', { invoiceNumber: invoice.invoice_number }, 'INFO')
+    logger('Generating PDF for invoice', { invoiceNumber: invoice.invoice_id }, 'INFO')
     try {
       pdfBytes = await generateInvoicePDF(invoice)
       logger('PDF generated successfully', { size: pdfBytes.length }, 'INFO')
 
       // Save generated PDF to storage
-      const fileName = `inv-${invoice.invoice_number}.pdf`
+      const fileName = `inv-${invoice.invoice_id}.pdf`
       logger('Uploading PDF to storage', { fileName }, 'INFO')
       const { error: uploadError } = await supabaseClient.storage
         .from('invoices')
@@ -697,10 +697,10 @@ Deno.serve(handleCORS(async (req) => {
   if (pdfBytes) {
     const base64Pdf = btoa(String.fromCharCode(...pdfBytes))
     pdfAttachment = {
-      filename: `${invoice.invoice_number}.pdf`,
+      filename: `${invoice.invoice_id}.pdf`,
       content: base64Pdf,
     }
-    logger('PDF attached to email', { invoiceNumber: invoice.invoice_number }, 'INFO')
+    logger('PDF attached to email', { invoiceNumber: invoice.invoice_id }, 'INFO')
   } else {
     logger('No PDF available for attachment', {}, 'WARNING')
   }
@@ -845,7 +845,7 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Send invoice function completed successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     messageId: resendData.id,
     googleDriveSaved: !!googleDriveResult && !googleDriveResult.error
   }, 'INFO')

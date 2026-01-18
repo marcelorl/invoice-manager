@@ -31,7 +31,7 @@ export function InvoiceBasicInfo({ control, clients }: InvoiceBasicInfoProps) {
       <CardContent className="space-y-4">
         <FormField
           control={control}
-          name="invoice_number"
+          name="invoice_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Invoice Number</FormLabel>

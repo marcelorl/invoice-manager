@@ -228,7 +228,7 @@ function InvoiceReminderItem({
         <div>
           <Link href={`/invoices/${invoice.id}`}>
             <span className="text-sm font-medium hover:underline cursor-pointer">
-              {invoice.invoice_number}
+              {invoice.invoice_id}
             </span>
           </Link>
           <p className="text-xs text-muted-foreground">{invoice.client?.name}</p>

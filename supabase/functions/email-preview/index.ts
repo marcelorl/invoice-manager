@@ -95,7 +95,7 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Invoice fetched successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     clientName: invoice.client?.name,
     itemsCount: invoice.items?.length
   }, 'INFO')
@@ -159,7 +159,7 @@ Deno.serve(handleCORS(async (req) => {
 
   // Prepare template data
   const templateData = {
-    invoice_number: invoice.invoice_number,
+    invoice_number: invoice.invoice_id,
     invoice_date: formatDate(invoice.issue_date),
     due_date: formatDate(invoice.due_date),
     amount: formatCurrency(invoice.total),
@@ -201,7 +201,7 @@ Deno.serve(handleCORS(async (req) => {
 
   // Replace placeholders in template body
   logger('Applying template with placeholder data', {
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     templateDataKeys: Object.keys(templateData)
   }, 'INFO')
   const emailHtml = replacePlaceholders(template.body, templateData)
@@ -219,7 +219,7 @@ Deno.serve(handleCORS(async (req) => {
 
   logger('Email preview function completed successfully', {
     invoiceId,
-    invoiceNumber: invoice.invoice_number,
+    invoiceNumber: invoice.invoice_id,
     subject: emailSubject
   }, 'INFO')
 
