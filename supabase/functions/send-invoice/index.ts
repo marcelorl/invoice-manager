@@ -132,7 +132,7 @@ async function generateInvoicePDF(invoice: any): Promise<Uint8Array> {
   let detailY = billToY
 
   page.drawText('Invoice#', { x: rightColX, y: detailY, size: 10, font, color: lightGrayColor })
-  page.drawText(invoice.invoice_id, { x: valueColX, y: detailY, size: 10, font: boldFont, color: blackColor })
+  page.drawText(String(invoice.invoice_id), { x: valueColX, y: detailY, size: 10, font: boldFont, color: blackColor })
   detailY -= 14
 
   page.drawText('Invoice Date', { x: rightColX, y: detailY, size: 10, font, color: lightGrayColor })
