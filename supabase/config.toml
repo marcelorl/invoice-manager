@@ -329,25 +329,25 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.email-preview]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/email-preview/deno.json"
 entrypoint = "./functions/email-preview/index.ts"
 
 [functions.save-to-google-drive]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/save-to-google-drive/deno.json"
 entrypoint = "./functions/save-to-google-drive/index.ts"
 
 [functions.send-invoice]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/send-invoice/deno.json"
 entrypoint = "./functions/send-invoice/index.ts"
 
 [functions.summarize-description]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/summarize-description/deno.json"
 entrypoint = "./functions/summarize-description/index.ts"
 
