@@ -3,7 +3,7 @@ import { z } from "zod";
 export const invoiceItemSchema = z.object({
   description: z.string().optional(),
   raw_description: z.string().optional(),
-  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+  quantity: z.coerce.number().min(0, "Quantity must be positive"),
   rate: z.coerce.number().min(0, "Rate must be positive"),
   item_date: z.string().min(1, "Date is required"),
 });

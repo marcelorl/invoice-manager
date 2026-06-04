@@ -52,7 +52,7 @@ function InvoiceFormContent() {
       items: [{
         description: "",
         raw_description: "",
-        quantity: 8,
+        quantity: 0,
         rate: 0,
         item_date: formatDateForInput(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000))
       }],
@@ -369,7 +369,7 @@ function InvoiceFormContent() {
     append({
       description: "",
       raw_description: "",
-      quantity: 8,
+      quantity: 0,
       rate: defaultRate,
       item_date: defaultDate
     });
@@ -615,7 +615,7 @@ function InvoiceFormContent() {
                               <FormControl>
                                 <Input
                                   type="number"
-                                  min={1}
+                                  min={0}
                                   {...field}
                                   className="h-10 w-full max-w-full"
                                   data-testid={`input-item-quantity-${index}`}
