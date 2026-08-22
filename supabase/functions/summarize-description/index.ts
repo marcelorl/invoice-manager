@@ -35,7 +35,7 @@ async function callGroq(
   try {
     const groq = new Groq({ apiKey })
 
-    const chatCompletion = await groq.chat.completions.create({
+    const requestParams: Record<string, any> = {
       messages: [
         {
           role: 'system',
@@ -48,22 +48,37 @@ async function callGroq(
       ],
       model,
       temperature: 0.3,
-      max_completion_tokens: 100,
+      max_completion_tokens: 1024,
       top_p: 0.9,
       stream: false,
-    })
+    }
 
-    const summary = chatCompletion.choices[0]?.message?.content
+    // Reasoning model optimizations for faster responses without token truncation
+    if (model.includes('gpt-oss')) {
+      requestParams.reasoning_effort = 'low'
+      requestParams.include_reasoning = false
+    }
+
+    const chatCompletion = await groq.chat.completions.create(requestParams as any)
+
+    const choice = chatCompletion.choices?.[0]
+    let summary = choice?.message?.content
+
+    // Fallback if reasoning is placed in a separate property
+    if (!summary && (choice?.message as any)?.reasoning) {
+      summary = (choice?.message as any).reasoning
+    }
 
     if (!summary) {
-      throw new Error('No response from Groq')
+      logger('No response content from Groq', { choice }, 'ERROR')
+      throw new Error(`No response from Groq (finish_reason: ${choice?.finish_reason || 'unknown'})`)
     }
 
     logger('Groq response received', { hasResponse: !!summary }, 'INFO')
 
-    // Clean up the response (remove quotes, extra whitespace)
-    let cleanedSummary = summary.trim()
-    cleanedSummary = cleanedSummary.replace(/^["']|["']$/g, '') // Remove surrounding quotes
+    // Clean up the response (remove think tags if present, remove quotes, extra whitespace)
+    let cleanedSummary = summary.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+    cleanedSummary = cleanedSummary.replace(/^["']|["']$/g, '').trim() // Remove surrounding quotes
     cleanedSummary = cleanedSummary.replace(/\n/g, ' ').replace(/\s+/g, ' ') // Normalize whitespace
 
     return cleanedSummary
