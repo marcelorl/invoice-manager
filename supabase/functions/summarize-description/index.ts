@@ -43,7 +43,7 @@ async function callGroq(
           content: `Now summarize this description:\n\n"${rawDescription}"\n\nOne-line summary:`,
         },
       ],
-      model: 'llama-3.1-8b-instant',
+      model: 'meta-llama/llama-prompt-guard-2-22m',
       temperature: 0.3,
       max_completion_tokens: 100,
       top_p: 0.9,
