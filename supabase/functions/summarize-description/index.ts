@@ -23,11 +23,14 @@ Output: "User profile API endpoint development"
 Input: "Project management and client communication for Q1 roadmap planning including 3 meetings and documentation"
 Output: "Q1 roadmap planning and project coordination"`
 
+const DEFAULT_MODEL = 'openai/gpt-oss-120b'
+
 async function callGroq(
   apiKey: string,
-  rawDescription: string
+  rawDescription: string,
+  model: string = DEFAULT_MODEL
 ): Promise<string> {
-  logger('Calling Groq API', { model: 'llama-3.1-8b-instant' }, 'INFO')
+  logger('Calling Groq API', { model }, 'INFO')
 
   try {
     const groq = new Groq({ apiKey })
@@ -43,7 +46,7 @@ async function callGroq(
           content: `Now summarize this description:\n\n"${rawDescription}"\n\nOne-line summary:`,
         },
       ],
-      model: 'meta-llama/llama-prompt-guard-2-22m',
+      model,
       temperature: 0.3,
       max_completion_tokens: 100,
       top_p: 0.9,
@@ -96,8 +99,9 @@ Deno.serve(handleCORS(async (req) => {
   const { rawDescription } = validation.data
   logger('Request validated successfully', { rawDescription }, 'INFO')
 
-  // Get Groq API key from environment
+  // Get Groq API key and optional model from environment
   const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')
+  const GROQ_MODEL = Deno.env.get('GROQ_MODEL') || DEFAULT_MODEL
 
   if (!GROQ_API_KEY) {
     logger('Groq API key not configured', {}, 'ERROR')
@@ -111,11 +115,12 @@ Deno.serve(handleCORS(async (req) => {
   }
 
   try {
-    const summary = await callGroq(GROQ_API_KEY, rawDescription)
+    const summary = await callGroq(GROQ_API_KEY, rawDescription, GROQ_MODEL)
 
     logger('Summary generated successfully', {
       inputLength: rawDescription.length,
       outputLength: summary.length,
+      model: GROQ_MODEL,
       summary
     }, 'INFO')
 
@@ -123,7 +128,7 @@ Deno.serve(handleCORS(async (req) => {
       JSON.stringify({
         success: true,
         summary,
-        model: 'llama-3.1-8b-instant',
+        model: GROQ_MODEL,
       }),
       {
         headers: { 'Content-Type': 'application/json' },
