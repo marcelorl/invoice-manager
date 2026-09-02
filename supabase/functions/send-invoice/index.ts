@@ -388,8 +388,8 @@ Deno.serve(handleCORS(async (req) => {
     )
   }
 
-  const { invoiceId, to, subject, body: emailBody, useTemplate, saveToGoogleDrive } = validation.data
-  logger('Request validated successfully', { invoiceId, to, subject, useTemplate, saveToGoogleDrive }, 'INFO')
+  const { invoiceId, to, subject, body: emailBody, useTemplate, saveToGoogleDrive, generatePdfOnly } = validation.data
+  logger('Request validated successfully', { invoiceId, to, subject, useTemplate, saveToGoogleDrive, generatePdfOnly }, 'INFO')
 
   // Fetch invoice with client and items (always needed for PDF attachment)
   logger('Fetching invoice from database', { invoiceId }, 'INFO')
@@ -421,6 +421,144 @@ Deno.serve(handleCORS(async (req) => {
     itemsCount: invoice.items?.length
   }, 'INFO')
 
+  // Fetch business settings (needed for PDF generation and email template)
+  logger('Fetching business settings', {}, 'INFO')
+  const { data: settings, error: settingsError } = await supabaseClient
+    .from('business_settings')
+    .select('*')
+    .limit(1)
+    .maybeSingle()
+
+  if (settingsError && settingsError.code !== 'PGRST116') {
+    logger('Error fetching settings', { error: settingsError }, 'ERROR')
+  } else {
+    logger('Business settings fetched', { hasSettings: !!settings }, 'INFO')
+  }
+
+  if (generatePdfOnly) {
+    logger('Generating PDF only', { invoiceId }, 'INFO')
+
+    if (invoice.file_path) {
+      logger('PDF already exists', { filePath: invoice.file_path }, 'INFO')
+      return new Response(
+        JSON.stringify({ success: true, filePath: invoice.file_path, alreadyExists: true }),
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Populate metadata if it doesn't exist (for old invoices)
+    if (!invoice.metadata && (settings || invoice.client)) {
+      logger('Populating metadata for invoice without metadata', { invoiceId }, 'INFO')
+
+      let notesText = ''
+      if (settings) {
+        notesText = `Payment Information\n\n`
+        notesText += `Beneficiary Name: ${settings.beneficiary_name}\n`
+        notesText += `CNPJ: ${settings.beneficiary_cnpj}\n`
+        notesText += `SWIFT/BIC Code: ${settings.swift_code}\n`
+        notesText += `Bank Name: ${settings.bank_name}\n`
+        notesText += `Bank Address: ${settings.bank_address}\n`
+        notesText += `Routing Number: ${settings.routing_number}\n`
+        notesText += `Account Number: ${settings.account_number}\n`
+        notesText += `Account Type: ${settings.account_type}`
+      }
+
+      const termsText = invoice.client?.terms || ''
+
+      const metadata = {
+        billTo: {
+          name: invoice.client?.name || '',
+          address: invoice.client?.address || '',
+          city: invoice.client?.city || '',
+          state: invoice.client?.state || '',
+          postal_code: invoice.client?.postal_code || '',
+          country: invoice.client?.country || '',
+          email: invoice.client?.target_email || '',
+          cc_email: invoice.client?.cc_email || undefined,
+        },
+        business: {
+          company_name: settings?.company_name || '',
+          owner_name: settings?.owner_name || '',
+          address: settings?.address || '',
+          city: settings?.city || '',
+          state: settings?.state || '',
+          postal_code: settings?.postal_code || '',
+          country: settings?.country || '',
+          email: settings?.email || '',
+          phone: settings?.phone || '',
+          bank_name: settings?.bank_name || '',
+          bank_address: settings?.bank_address || '',
+          swift_code: settings?.swift_code || '',
+          routing_number: settings?.routing_number || '',
+          account_number: settings?.account_number || '',
+          account_type: settings?.account_type || '',
+          beneficiary_name: settings?.beneficiary_name || '',
+          beneficiary_cnpj: settings?.beneficiary_cnpj || '',
+        },
+        terms: termsText,
+        notes: notesText,
+      }
+
+      const { error: updateMetadataError } = await supabaseClient
+        .from('invoices')
+        .update({ metadata: metadata })
+        .eq('id', invoiceId)
+
+      if (updateMetadataError) {
+        logger('Error updating invoice metadata', { error: updateMetadataError }, 'ERROR')
+      } else {
+        logger('Invoice metadata populated successfully', {}, 'INFO')
+        invoice.metadata = metadata
+      }
+    }
+
+    try {
+      const pdfBytes = await generateInvoicePDF(invoice)
+      const fileName = `inv-${invoice.invoice_id}.pdf`
+
+      logger('Uploading PDF to storage', { fileName }, 'INFO')
+      const { error: uploadError } = await supabaseClient.storage
+        .from('invoices')
+        .upload(fileName, pdfBytes, {
+          contentType: 'application/pdf',
+          upsert: true,
+        })
+
+      if (uploadError) {
+        logger('Error uploading PDF to storage', { error: uploadError }, 'ERROR')
+        return new Response(
+          JSON.stringify({ error: `Failed to upload PDF: ${uploadError.message}` }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { error: updateError } = await supabaseClient
+        .from('invoices')
+        .update({ file_path: fileName })
+        .eq('id', invoiceId)
+
+      if (updateError) {
+        logger('Error updating invoice file_path', { error: updateError }, 'ERROR')
+        return new Response(
+          JSON.stringify({ error: `Failed to update invoice: ${updateError.message}` }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      logger('PDF generated and saved successfully', { fileName }, 'INFO')
+      return new Response(
+        JSON.stringify({ success: true, filePath: fileName }),
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+    } catch (error) {
+      logger('Error generating PDF', { error: error.message }, 'ERROR')
+      return new Response(
+        JSON.stringify({ error: `Failed to generate PDF: ${error.message}` }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
   // Use client email if not provided
   const recipientEmail = to || invoice.client?.target_email
   if (!recipientEmail) {
@@ -435,20 +573,6 @@ Deno.serve(handleCORS(async (req) => {
   }
 
   logger('Recipient email determined', { recipientEmail }, 'INFO')
-
-  // Fetch business settings (needed for both template and PDF generation)
-  logger('Fetching business settings', {}, 'INFO')
-  const { data: settings, error: settingsError } = await supabaseClient
-    .from('business_settings')
-    .select('*')
-    .limit(1)
-    .maybeSingle()
-
-  if (settingsError && settingsError.code !== 'PGRST116') {
-    logger('Error fetching settings', { error: settingsError }, 'ERROR')
-  } else {
-    logger('Business settings fetched', { hasSettings: !!settings }, 'INFO')
-  }
 
   let emailHtml = emailBody
   let emailSubject = subject

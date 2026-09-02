@@ -5,6 +5,7 @@ import { useDeleteInvoice } from "./useDeleteInvoice";
 import { useSaveToGoogleDrive } from "./useSaveToGoogleDrive";
 import { useSendInvoiceEmail } from "./useSendInvoiceEmail";
 import { usePreviewInvoiceEmail } from "./usePreviewInvoiceEmail";
+import { useGenerateInvoicePdf } from "./useGenerateInvoicePdf";
 import { getInvoicePDFSignedUrl } from "@/lib/supabase";
 import type { Invoice, Client, InvoiceItem } from "@shared/types";
 
@@ -28,6 +29,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
   const saveToGoogleDriveMutation = useSaveToGoogleDrive(invoiceId);
   const sendEmailMutation = useSendInvoiceEmail(invoiceId);
   const previewEmailMutation = usePreviewInvoiceEmail(invoiceId);
+  const generatePdfMutation = useGenerateInvoicePdf(invoiceId);
 
   // Fetch PDF URL when invoice file_path changes
   useEffect(() => {
@@ -71,6 +73,8 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
     });
   };
 
+  const handleGeneratePdf = () => generatePdfMutation.mutate();
+
   return {
     // Invoice data (derived from context)
     invoiceNumber: invoice?.invoice_id || '',
@@ -86,6 +90,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
     onSaveToGoogleDrive: handleSaveToGoogleDrive,
     onSendEmail: handleSendEmail,
     onPreviewEmail: handlePreviewEmail,
+    onGeneratePdf: handleGeneratePdf,
 
     // Loading states
     isMarkingPaid: markAsPaidMutation.isPending,
@@ -93,6 +98,7 @@ export function useInvoiceActions(invoiceId: string | undefined, invoice: Invoic
     isSavingToGoogleDrive: saveToGoogleDriveMutation.isPending,
     isSendingEmail: sendEmailMutation.isPending,
     isLoadingPreview: previewEmailMutation.isPending,
+    isGeneratingPdf: generatePdfMutation.isPending,
 
     // Email preview state
     emailPreviewHtml,

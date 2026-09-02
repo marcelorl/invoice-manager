@@ -462,6 +462,19 @@ export async function sendInvoiceEmail(invoiceId: string, emailData?: { to?: str
   return data
 }
 
+export async function generateInvoicePdf(invoiceId: string) {
+  const { data, error } = await supabase.functions.invoke('send-invoice', {
+    body: {
+      invoiceId,
+      generatePdfOnly: true,
+    },
+  })
+
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
 export async function getInvoiceEmailPreview(invoiceId: string) {
   const { data, error } = await supabase.functions.invoke('email-preview', {
     body: { invoiceId },

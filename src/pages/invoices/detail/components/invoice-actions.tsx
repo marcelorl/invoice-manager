@@ -38,6 +38,7 @@ import {
   CloudUpload,
   Eye,
   ArrowRightLeft,
+  FilePlus,
 } from "lucide-react";
 import { useInvoiceContext } from "@/contexts/InvoiceContext";
 import { useInvoiceActions } from "../hooks/useInvoiceActions";
@@ -70,11 +71,13 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
     onSaveToGoogleDrive,
     onSendEmail,
     onPreviewEmail,
+    onGeneratePdf,
     isMarkingPaid,
     isMarkingTransferred,
     isSavingToGoogleDrive,
     isSendingEmail,
     isLoadingPreview,
+    isGeneratingPdf,
   } = useInvoiceActions(invoiceId, invoice);
 
   return (
@@ -103,16 +106,29 @@ export function InvoiceActions({ invoiceId }: InvoiceActionsProps) {
         Mark as Transferred
       </Button>
 
-      <Button
-        variant="outline"
-        className="gap-2"
-        onClick={() => setShowPdfModal(true)}
-        disabled={!pdfUrl}
-        data-testid="button-view-pdf"
-      >
-        <Download className="h-4 w-4" />
-        View PDF
-      </Button>
+      {(pdfUrl || invoice?.file_path) ? (
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => setShowPdfModal(true)}
+          disabled={!pdfUrl}
+          data-testid="button-view-pdf"
+        >
+          <Download className="h-4 w-4" />
+          View PDF
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={onGeneratePdf}
+          disabled={isGeneratingPdf}
+          data-testid="button-generate-pdf"
+        >
+          <FilePlus className="h-4 w-4" />
+          {isGeneratingPdf ? "Generating..." : "Generate PDF"}
+        </Button>
+      )}
 
       <Button
         variant="outline"

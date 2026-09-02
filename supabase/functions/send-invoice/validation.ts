@@ -7,6 +7,7 @@ export const sendInvoiceSchema = z.object({
   body: z.string().optional(),
   useTemplate: z.boolean().optional().default(false),
   saveToGoogleDrive: z.boolean().optional().default(false),
+  generatePdfOnly: z.boolean().optional().default(false),
 })
 
 export type SendInvoiceRequest = z.infer<typeof sendInvoiceSchema>
